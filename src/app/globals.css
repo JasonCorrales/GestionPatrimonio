@@ -1,4 +1,5 @@
 :root {
+  color-scheme: light;
   --background: #edf2f7;
   --background-soft: #f8fafc;
   --foreground: #142033;
@@ -10,7 +11,39 @@
   --primary-soft: #e8efff;
   --danger: #c0352b;
   --danger-dark: #96251e;
+  --sidebar-bg: #0f1f38;
+  --sidebar-text: #ffffff;
+  --sidebar-muted: #9fb1ca;
+  --topbar-bg: rgba(248, 250, 252, 0.82);
+  --surface-strong: #ffffff;
+  --heading-bg: linear-gradient(135deg, #ffffff, #f3f7ff);
+  --highlight-bg: linear-gradient(135deg, #ffffff, #edf4ff);
+  --projection-bg: #0f1f38;
   --shadow: 0 18px 45px rgba(20, 32, 51, 0.09);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --background: #08111f;
+  --background-soft: #111c2e;
+  --foreground: #edf4ff;
+  --muted: #9fb1ca;
+  --card: #0f1b2d;
+  --border: #22324b;
+  --primary: #7aa2ff;
+  --primary-dark: #a8c0ff;
+  --primary-soft: rgba(122, 162, 255, 0.16);
+  --danger: #ef6b61;
+  --danger-dark: #f18a82;
+  --sidebar-bg: #060d18;
+  --sidebar-text: #ffffff;
+  --sidebar-muted: #8fa4c0;
+  --topbar-bg: rgba(8, 17, 31, 0.84);
+  --surface-strong: #111c2e;
+  --heading-bg: linear-gradient(135deg, #101b2d, #0d1830);
+  --highlight-bg: linear-gradient(135deg, #111c2e, rgba(122, 162, 255, 0.12));
+  --projection-bg: #050b14;
+  --shadow: 0 18px 45px rgba(0, 0, 0, 0.28);
 }
 
 * {
@@ -19,6 +52,11 @@
 
 html {
   background: var(--background);
+}
+
+html,
+body {
+  transition: background-color 160ms ease, color 160ms ease;
 }
 
 body {
@@ -48,8 +86,8 @@ button {
 }
 
 .sidebar {
-  background: #0f1f38;
-  color: white;
+  background: var(--sidebar-bg);
+  color: var(--sidebar-text);
   display: flex;
   flex-direction: column;
   gap: 32px;
@@ -58,7 +96,7 @@ button {
 
 .brand {
   align-items: center;
-  color: white;
+  color: var(--sidebar-text);
   display: flex;
   gap: 14px;
   text-decoration: none;
@@ -83,7 +121,7 @@ button {
 .brand small,
 .nav-item small,
 .topbar-kicker {
-  color: #9fb1ca;
+  color: var(--sidebar-muted);
 }
 
 .sidebar-nav {
@@ -119,7 +157,7 @@ button {
 .topbar {
   align-items: center;
   backdrop-filter: blur(14px);
-  background: rgba(248, 250, 252, 0.82);
+  background: var(--topbar-bg);
   border-bottom: 1px solid var(--border);
   display: flex;
   justify-content: space-between;
@@ -135,9 +173,28 @@ button {
   display: block;
 }
 
+.topbar-actions {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.theme-toggle {
+  align-items: center;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--foreground);
+  display: inline-flex;
+  font-size: 1.05rem;
+  height: 42px;
+  justify-content: center;
+  width: 42px;
+}
+
 .session-chip {
   align-items: center;
-  background: white;
+  background: var(--surface-strong);
   border: 1px solid var(--border);
   border-radius: 999px;
   display: flex;
@@ -152,7 +209,7 @@ button {
 }
 
 .session-chip button {
-  background: var(--foreground);
+  background: var(--primary);
   border: 0;
   border-radius: 999px;
   color: white;
@@ -173,7 +230,7 @@ button {
 }
 
 .auth-card {
-  background: white;
+  background: var(--card);
   border: 1px solid var(--border);
   border-radius: 28px;
   box-shadow: var(--shadow);
@@ -210,7 +267,7 @@ button {
 }
 
 .page-heading {
-  background: linear-gradient(135deg, #ffffff, #f3f7ff);
+  background: var(--heading-bg);
   border: 1px solid var(--border);
   border-radius: 28px;
   box-shadow: var(--shadow);
@@ -232,7 +289,7 @@ button {
 }
 
 .month-filter input {
-  background: white;
+  background: var(--surface-strong);
   border: 1px solid var(--border);
   border-radius: 14px;
   color: var(--foreground);
@@ -307,7 +364,7 @@ button {
 }
 
 .highlight-card {
-  background: linear-gradient(135deg, #ffffff, #edf4ff);
+  background: var(--highlight-bg);
   border-color: rgba(36, 88, 211, 0.24);
 }
 
@@ -468,7 +525,7 @@ button {
 }
 
 .projection-result {
-  background: #0f1f38;
+  background: var(--projection-bg);
   border-radius: 20px;
   color: white;
   display: grid;
@@ -496,7 +553,7 @@ button {
 }
 
 .tabs {
-  background: white;
+  background: var(--surface-strong);
   border: 1px solid var(--border);
   border-radius: 18px;
   display: inline-flex;
@@ -584,7 +641,7 @@ button {
 }
 
 .donut-chart::after {
-  background: white;
+  background: var(--card);
   border-radius: 50%;
   content: "";
   height: 138px;

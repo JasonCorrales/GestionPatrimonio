@@ -15,6 +15,7 @@ Small web MVP for monthly patrimony tracking.
 - Protect the dashboard with Supabase email/password login and logout.
 - Calculate retirement compound-interest scenarios live and persist selected saved calculations.
 - View a main dashboard with monthly patrimony distribution and progress toward the latest retirement goal.
+- Switch between light and dark visual themes from the topbar.
 - Track the categories the user currently manages:
   - Inversion Bolsa
   - Certificados a Plazo

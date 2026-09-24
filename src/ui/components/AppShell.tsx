@@ -13,13 +13,20 @@ const navigationItems = [
   { href: "/retirement", label: "Jubilación", description: "Interés compuesto" },
 ];
 
+type ThemePreference = "light" | "dark";
+
 export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
   const pathname = usePathname();
   const router = useRouter();
   const isLoginPage = pathname === "/login";
+  const [theme, setTheme] = useState<ThemePreference>(() => getInitialTheme());
   const [session, setSession] = useState<Session | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme;
+  }, [theme]);
 
   useEffect(() => {
     let mounted = true;
@@ -71,6 +78,13 @@ export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
       router.replace("/");
     }
   }, [isLoginPage, loadingSession, router, session]);
+
+  function toggleTheme() {
+    const nextTheme = theme === "light" ? "dark" : "light";
+    setTheme(nextTheme);
+    localStorage.setItem("theme-preference", nextTheme);
+    document.documentElement.dataset.theme = nextTheme;
+  }
 
   async function handleSignOut() {
     await signOut();
@@ -130,9 +144,20 @@ export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
             <span className="topbar-kicker">Control financiero personal</span>
             <strong>Patrimonio mensual</strong>
           </div>
-          <div className="session-chip">
-            <span>{session.user.email}</span>
-            <button type="button" onClick={handleSignOut}>Salir</button>
+          <div className="topbar-actions">
+            <button
+              aria-label={theme === "light" ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
+              className="theme-toggle"
+              onClick={toggleTheme}
+              title={theme === "light" ? "Modo oscuro" : "Modo claro"}
+              type="button"
+            >
+              {theme === "light" ? "🌙" : "☀️"}
+            </button>
+            <div className="session-chip">
+              <span>{session.user.email}</span>
+              <button type="button" onClick={handleSignOut}>Salir</button>
+            </div>
           </div>
         </header>
         <main className="page-container">{children}</main>
@@ -151,6 +176,20 @@ function FullPageStatus({ title, message }: Readonly<{ title: string; message: s
       </section>
     </main>
   );
+}
+
+function getInitialTheme(): ThemePreference {
+  if (typeof window === "undefined") {
+    return "light";
+  }
+
+  const savedTheme = localStorage.getItem("theme-preference");
+
+  if (savedTheme === "light" || savedTheme === "dark") {
+    return savedTheme;
+  }
+
+  return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
 function getErrorMessage(error: unknown) {
