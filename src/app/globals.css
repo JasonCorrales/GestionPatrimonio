@@ -1,0 +1,135 @@
+:root {
+  --background: #f6f7fb;
+  --foreground: #172033;
+  --muted: #667085;
+  --card: #ffffff;
+  --border: #d9e1ec;
+  --primary: #2458d3;
+  --primary-dark: #1d46a8;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+}
+
+button,
+input,
+textarea {
+  font: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+.shell {
+  margin: 0 auto;
+  max-width: 1120px;
+  padding: 48px 24px;
+}
+
+.hero {
+  margin-bottom: 32px;
+}
+
+.eyebrow {
+  color: var(--primary);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.hero h1 {
+  font-size: clamp(2rem, 4vw, 3.5rem);
+  line-height: 1;
+  margin: 0 0 16px;
+}
+
+.hero p {
+  color: var(--muted);
+  max-width: 720px;
+}
+
+.grid {
+  display: grid;
+  gap: 24px;
+  grid-template-columns: minmax(0, 1fr) minmax(320px, 0.8fr);
+}
+
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  box-shadow: 0 18px 45px rgba(23, 32, 51, 0.08);
+  padding: 24px;
+}
+
+.form {
+  display: grid;
+  gap: 16px;
+}
+
+.form label {
+  display: grid;
+  gap: 8px;
+  font-weight: 700;
+}
+
+.form input,
+.form select,
+.form textarea {
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 12px 14px;
+}
+
+.form button {
+  background: var(--primary);
+  border: 0;
+  border-radius: 12px;
+  color: white;
+  font-weight: 700;
+  padding: 14px 16px;
+}
+
+.form button:hover {
+  background: var(--primary-dark);
+}
+
+.message,
+.muted,
+.record p {
+  color: var(--muted);
+}
+
+.records {
+  display: grid;
+  gap: 12px;
+}
+
+.record {
+  align-items: center;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 16px;
+}
+
+.record p {
+  margin: 6px 0 0;
+}
+
+@media (max-width: 800px) {
+  .grid {
+    grid-template-columns: 1fr;
+  }
+}
