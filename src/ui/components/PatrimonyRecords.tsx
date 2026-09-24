@@ -8,6 +8,7 @@ import {
   type PatrimonyRecordView,
 } from "@/application/use-cases/PatrimonyRecordService";
 import { createPatrimonyRecordRepository, getConfiguredDataSource } from "@/data/createPatrimonyRecordRepository";
+import { PatrimonyBulkImport } from "./PatrimonyBulkImport";
 
 const currencyFormatter = new Intl.NumberFormat("es-CR", {
   style: "currency",
@@ -15,12 +16,15 @@ const currencyFormatter = new Intl.NumberFormat("es-CR", {
   maximumFractionDigits: 0,
 });
 
+type RecordsTab = "entry" | "history";
+
 export function PatrimonyRecords() {
   const service = useMemo(
     () => new PatrimonyRecordService(createPatrimonyRecordRepository()),
     [],
   );
   const dataSource = getConfiguredDataSource();
+  const [activeTab, setActiveTab] = useState<RecordsTab>("entry");
   const [recordDate, setRecordDate] = useState(currentDate());
   const [categoryId, setCategoryId] = useState("");
   const [amount, setAmount] = useState(0);
@@ -61,6 +65,7 @@ export function PatrimonyRecords() {
           record.id === updated.id ? updated : record,
         )));
         resetRecordForm();
+        setActiveTab("history");
         setMessage("Registro actualizado.");
         return;
       }
@@ -94,6 +99,7 @@ export function PatrimonyRecords() {
     setCategoryId(record.category.id);
     setAmount(record.amount);
     setNotes(record.notes ?? "");
+    setActiveTab("entry");
     setMessage("Editando el registro seleccionado.");
   }
 
@@ -136,7 +142,7 @@ export function PatrimonyRecords() {
         <p className="eyebrow">Registros</p>
         <h1>Registro mensual de patrimonio</h1>
         <p>
-          Capturá una fecha, categoría, monto y nota. La UI usa casos de uso de la capa de aplicación; no conoce Supabase ni detalles de persistencia.
+          Capturá una fecha, categoría, monto y nota. También podés importar registros desde una plantilla de Excel.
         </p>
       </section>
 
@@ -155,65 +161,100 @@ export function PatrimonyRecords() {
         </article>
       </section>
 
-      <section className="two-column-grid">
-        <form className="card form elevated-card" onSubmit={handleRecordSubmit}>
-          <div>
-            <p className="eyebrow">Formulario</p>
-            <h2>{editingRecordId ? "Editar registro" : "Nuevo registro"}</h2>
-          </div>
+      <div className="tabs" role="tablist" aria-label="Secciones de registros">
+        <button
+          aria-selected={activeTab === "entry"}
+          className={activeTab === "entry" ? "tab-button active" : "tab-button"}
+          onClick={() => setActiveTab("entry")}
+          role="tab"
+          type="button"
+        >
+          Registro y carga masiva
+        </button>
+        <button
+          aria-selected={activeTab === "history"}
+          className={activeTab === "history" ? "tab-button active" : "tab-button"}
+          onClick={() => setActiveTab("history")}
+          role="tab"
+          type="button"
+        >
+          Histórico
+        </button>
+      </div>
 
-          <label>
-            Fecha
-            <input
-              type="date"
-              value={recordDate}
-              onChange={(event) => setRecordDate(event.target.value)}
-            />
-          </label>
+      {activeTab === "entry" ? (
+        <section className="two-column-grid">
+          <form className="card form elevated-card" onSubmit={handleRecordSubmit}>
+            <div>
+              <p className="eyebrow">Formulario</p>
+              <h2>{editingRecordId ? "Editar registro" : "Nuevo registro"}</h2>
+            </div>
 
-          <label>
-            Categoría
-            <select
-              value={categoryId}
-              onChange={(event) => setCategoryId(event.target.value)}
-            >
-              {categories.map((category) => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </label>
+            <label>
+              Fecha
+              <input
+                type="date"
+                value={recordDate}
+                onChange={(event) => setRecordDate(event.target.value)}
+              />
+            </label>
 
-          <label>
-            Monto
-            <input
-              min="0"
-              step="0.01"
-              type="number"
-              value={amount}
-              onChange={(event) => setAmount(Number(event.target.value || 0))}
-            />
-          </label>
+            <label>
+              Categoría
+              <select
+                value={categoryId}
+                onChange={(event) => setCategoryId(event.target.value)}
+              >
+                {categories.map((category) => (
+                  <option key={category.id} value={category.id}>
+                    {category.name}
+                  </option>
+                ))}
+              </select>
+            </label>
 
-          <label>
-            Nota
-            <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} />
-          </label>
+            <label>
+              Monto
+              <input
+                min="0"
+                step="0.01"
+                type="number"
+                value={amount}
+                onChange={(event) => setAmount(Number(event.target.value || 0))}
+              />
+            </label>
 
-          <div className="form-actions">
-            <button type="submit">
-              {editingRecordId ? "Actualizar registro" : "Guardar registro"}
-            </button>
-            {editingRecordId ? (
-              <button className="secondary-button" type="button" onClick={() => resetRecordForm()}>
-                Cancelar edición
+            <label>
+              Nota
+              <textarea value={notes} onChange={(event) => setNotes(event.target.value)} rows={3} />
+            </label>
+
+            <div className="form-actions">
+              <button type="submit">
+                {editingRecordId ? "Actualizar registro" : "Guardar registro"}
               </button>
-            ) : null}
-          </div>
-          <p className="message">{message}</p>
-        </form>
+              {editingRecordId ? (
+                <button className="secondary-button" type="button" onClick={() => resetRecordForm()}>
+                  Cancelar edición
+                </button>
+              ) : null}
+            </div>
+            <p className="message">{message}</p>
+          </form>
 
+          <div className="content-stack compact-stack">
+            <PatrimonyBulkImport
+              categories={categories}
+              onImported={(importedRecords) => {
+                setRecords((current) => sortRecords([...importedRecords, ...current]));
+                setMessage(`${importedRecords.length} registros importados desde Excel.`);
+                setActiveTab("history");
+              }}
+              service={service}
+            />
+          </div>
+        </section>
+      ) : (
         <section className="card history elevated-card">
           <div className="section-title-row">
             <div>
@@ -252,7 +293,7 @@ export function PatrimonyRecords() {
             </div>
           )}
         </section>
-      </section>
+      )}
     </div>
   );
 }

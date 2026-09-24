@@ -63,6 +63,16 @@ export class PatrimonyRecordService {
     return this.repository.save(input);
   }
 
+  async createRecords(inputs: PatrimonyRecordInput[]): Promise<PatrimonyRecordView[]> {
+    const createdRecords: PatrimonyRecordView[] = [];
+
+    for (const input of inputs) {
+      createdRecords.push(await this.createRecord(input));
+    }
+
+    return createdRecords;
+  }
+
   async updateRecord(
     id: string,
     input: PatrimonyRecordInput,

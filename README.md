@@ -4,11 +4,12 @@ Small web MVP for monthly patrimony tracking.
 
 ## Current scope
 
-- Register, edit, and delete patrimony entries with four fields:
+- Register, edit, delete, and bulk import patrimony entries with four fields:
   - date
   - category
   - amount
   - note
+- Import patrimony records from Excel using columns `Fecha`, `Categoria`, `Monto`, and optional `Nota`; an empty template is available at `public/templates/patrimony-records-template.xlsx`.
 - Navigate through a dashboard-style menu with a main dashboard plus separate record and category sections.
 - Maintain categories from the UI: list, create, edit, delete, and optional expected annual interest rate.
 - Protect the dashboard with Supabase email/password login and logout.

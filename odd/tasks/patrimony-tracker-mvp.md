@@ -42,6 +42,7 @@ Build a small web MVP to register monthly patrimony by category, using a layered
 - [x] Add user ownership and RLS for categories, patrimony records, and retirement calculations.
 - [x] Add optional category interest rate.
 - [x] Add main dashboard with monthly patrimony distribution and retirement goal progress.
+- [x] Add Excel bulk import for patrimony records with Fecha, Categoria, Monto, Nota columns.
 - [ ] Create `.env.example` if the harness safety policy allows that sensitive-looking path; README currently documents the same variables.
 
 ## Evidence

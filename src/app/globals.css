@@ -338,7 +338,8 @@ button {
 
 .form input,
 .form select,
-.form textarea {
+.form textarea,
+.file-upload {
   background: var(--background-soft);
   border: 1px solid var(--border);
   border-radius: 14px;
@@ -483,6 +484,79 @@ button {
 .projection-result strong {
   font-size: clamp(2rem, 4vw, 3.4rem);
   line-height: 1;
+}
+
+.import-card {
+  display: grid;
+  gap: 16px;
+}
+
+.compact-stack {
+  gap: 16px;
+}
+
+.tabs {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  display: inline-flex;
+  gap: 8px;
+  padding: 8px;
+  width: fit-content;
+}
+
+.tab-button {
+  background: transparent;
+  border: 0;
+  border-radius: 12px;
+  color: var(--muted);
+  font-weight: 900;
+  padding: 12px 16px;
+}
+
+.tab-button.active {
+  background: var(--primary);
+  color: white;
+}
+
+.import-format-grid {
+  display: grid;
+  gap: 10px;
+}
+
+.import-format-grid div {
+  background: var(--background-soft);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  display: grid;
+  gap: 4px;
+  padding: 12px;
+}
+
+.import-format-grid span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
+.template-link {
+  background: var(--primary-soft);
+  border-radius: 12px;
+  color: var(--primary-dark);
+  font-weight: 900;
+  padding: 12px 14px;
+  text-align: center;
+  text-decoration: none;
+}
+
+.file-upload {
+  cursor: pointer;
+  display: grid;
+  gap: 8px;
+  font-weight: 800;
+}
+
+.file-upload input {
+  cursor: pointer;
 }
 
 .dashboard-card {
@@ -659,7 +733,8 @@ button {
   .section-title-row,
   .session-chip,
   .topbar,
-  .dashboard-heading {
+  .dashboard-heading,
+  .tabs {
     align-items: flex-start;
     flex-direction: column;
   }

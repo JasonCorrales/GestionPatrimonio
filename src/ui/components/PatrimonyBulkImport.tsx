@@ -1,0 +1,240 @@
+"use client";
+
+import { ChangeEvent, useState } from "react";
+import { readSheet } from "read-excel-file/browser";
+import type { PatrimonyRecordInput } from "@/application/ports/PatrimonyRecordRepository";
+import {
+  PatrimonyRecordService,
+  type PatrimonyRecordView,
+} from "@/application/use-cases/PatrimonyRecordService";
+import type { PatrimonyCategory } from "@/domain/patrimonyCategory";
+
+type PatrimonyBulkImportProps = {
+  categories: PatrimonyCategory[];
+  service: PatrimonyRecordService;
+  onImported(records: PatrimonyRecordView[]): void;
+};
+
+type ExcelCell = string | number | boolean | Date | null;
+type ExcelRow = ExcelCell[];
+
+type HeaderMap = {
+  date?: number;
+  category?: number;
+  amount?: number;
+  notes?: number;
+};
+
+export function PatrimonyBulkImport({
+  categories,
+  service,
+  onImported,
+}: PatrimonyBulkImportProps) {
+  const [importing, setImporting] = useState(false);
+  const [message, setMessage] = useState(
+    "Formato esperado: Fecha, Categoria, Monto, Nota. La nota es opcional.",
+  );
+
+  async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    setImporting(true);
+    setMessage("Procesando archivo...");
+
+    try {
+      const rows = await readSheet(file) as ExcelRow[];
+      const parsedRecords = parseRows(rows, categories);
+      const createdRecords = await service.createRecords(parsedRecords);
+      onImported(createdRecords);
+      setMessage(`Carga masiva completada: ${createdRecords.length} registros importados.`);
+    } catch (error) {
+      setMessage(`No se pudo importar el archivo: ${getErrorMessage(error)}`);
+    } finally {
+      setImporting(false);
+      event.target.value = "";
+    }
+  }
+
+  return (
+    <section className="card elevated-card import-card">
+      <div>
+        <p className="eyebrow">Carga masiva</p>
+        <h2>Importar desde Excel</h2>
+        <p className="muted">
+          Usá una hoja con encabezados <strong>Fecha</strong>, <strong>Categoria</strong>, <strong>Monto</strong> y <strong>Nota</strong>. La categoría debe existir en el catálogo.
+        </p>
+      </div>
+
+      <div className="import-format-grid">
+        <div>
+          <strong>Fecha</strong>
+          <span>Formato recomendado: YYYY-MM-DD. Ejemplo: 2026-01-31.</span>
+        </div>
+        <div>
+          <strong>Categoria</strong>
+          <span>Texto exacto de una categoría existente. Ejemplo: Inversion Bolsa.</span>
+        </div>
+        <div>
+          <strong>Monto</strong>
+          <span>Número positivo sin símbolo de moneda. Ejemplo: 100000.</span>
+        </div>
+        <div>
+          <strong>Nota</strong>
+          <span>Opcional. Texto libre para describir el registro.</span>
+        </div>
+      </div>
+
+      <a className="template-link" href="/templates/patrimony-records-template.xlsx" download>
+        Descargar plantilla vacía
+      </a>
+
+      <label className="file-upload">
+        Seleccionar archivo Excel
+        <input
+          accept=".xlsx,.xls"
+          disabled={importing}
+          onChange={handleFileChange}
+          type="file"
+        />
+      </label>
+      <p className="message">{message}</p>
+    </section>
+  );
+}
+
+function parseRows(rows: ExcelRow[], categories: PatrimonyCategory[]): PatrimonyRecordInput[] {
+  if (rows.length < 2) {
+    throw new Error("El archivo debe tener encabezados y al menos una fila de datos.");
+  }
+
+  const [headerRow, ...dataRows] = rows;
+  const headerMap = mapHeaders(headerRow);
+
+  if (headerMap.date === undefined || headerMap.category === undefined || headerMap.amount === undefined) {
+    throw new Error("Faltan columnas requeridas: Fecha, Categoria y Monto.");
+  }
+
+  const categoriesByName = new Map(
+    categories.map((category) => [normalizeText(category.name), category]),
+  );
+  const parsedRows: PatrimonyRecordInput[] = [];
+
+  dataRows.forEach((row, index) => {
+    if (row.every((cell) => cell === null || cell === "")) {
+      return;
+    }
+
+    const rowNumber = index + 2;
+    const categoryName = String(row[headerMap.category!] ?? "");
+    const category = categoriesByName.get(normalizeText(categoryName));
+
+    if (!category) {
+      throw new Error(`Fila ${rowNumber}: categoría no encontrada: ${categoryName}`);
+    }
+
+    const amount = parseAmount(row[headerMap.amount!]);
+
+    if (!Number.isFinite(amount) || amount < 0) {
+      throw new Error(`Fila ${rowNumber}: monto inválido.`);
+    }
+
+    parsedRows.push({
+      recordDate: parseDate(row[headerMap.date!], rowNumber),
+      categoryId: category.id,
+      amount,
+      notes: headerMap.notes === undefined ? undefined : String(row[headerMap.notes] ?? "") || undefined,
+    });
+  });
+
+  if (parsedRows.length === 0) {
+    throw new Error("No se encontraron filas válidas para importar.");
+  }
+
+  return parsedRows;
+}
+
+function mapHeaders(headerRow: ExcelRow): HeaderMap {
+  const headerMap: HeaderMap = {};
+
+  headerRow.forEach((cell, index) => {
+    const header = normalizeText(String(cell ?? ""));
+
+    if (["fecha", "date"].includes(header)) {
+      headerMap.date = index;
+    }
+
+    if (["categoria", "category"].includes(header)) {
+      headerMap.category = index;
+    }
+
+    if (["monto", "amount", "valor", "balance"].includes(header)) {
+      headerMap.amount = index;
+    }
+
+    if (["nota", "notas", "note", "notes"].includes(header)) {
+      headerMap.notes = index;
+    }
+  });
+
+  return headerMap;
+}
+
+function parseDate(value: ExcelCell, rowNumber: number) {
+  if (value instanceof Date) {
+    return value.toISOString().slice(0, 10);
+  }
+
+  if (typeof value === "number") {
+    return excelSerialDateToIso(value);
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+
+    if (/^\d{4}-\d{2}-\d{2}$/.test(trimmed)) {
+      return trimmed;
+    }
+
+    const parsed = new Date(trimmed);
+
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.toISOString().slice(0, 10);
+    }
+  }
+
+  throw new Error(`Fila ${rowNumber}: fecha inválida.`);
+}
+
+function parseAmount(value: ExcelCell) {
+  if (typeof value === "number") {
+    return value;
+  }
+
+  if (typeof value === "string") {
+    return Number(value.replace(/[^0-9.,-]/g, "").replace(",", "."));
+  }
+
+  return Number.NaN;
+}
+
+function excelSerialDateToIso(serial: number) {
+  const utcDays = Math.floor(serial - 25569);
+  const utcValue = utcDays * 86400;
+  return new Date(utcValue * 1000).toISOString().slice(0, 10);
+}
+
+function normalizeText(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .trim()
+    .toLocaleLowerCase();
+}
+
+function getErrorMessage(error: unknown) {
+  return error instanceof Error ? error.message : "Unknown error";
+}
