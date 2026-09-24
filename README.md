@@ -21,7 +21,7 @@ Small web MVP for monthly patrimony tracking.
   - Capital Social
 - Keep UI, business rules, and data access decoupled.
 - Use Supabase as the planned cloud database provider.
-- Authentication MVP is included with Supabase email/password; data is still shared until user scoping and RLS are added.
+- Authentication is included with Supabase email/password; patrimony data is scoped per authenticated user with RLS.
 
 ## Architecture
 
@@ -45,11 +45,11 @@ For local MVP behavior, `InMemoryPatrimonyRecordRepository` provides demo data w
 - default: in-memory demo repository
 - Supabase: only when `NEXT_PUBLIC_DATA_SOURCE=supabase` and the Supabase public variables are present
 
-## Authentication MVP warning
+## Authentication and RLS
 
-The dashboard is protected with Supabase email/password authentication. This is an MVP auth boundary only: patrimony records and categories are still shared because the schema does not yet include `user_id` or Row Level Security policies.
+The dashboard is protected with Supabase email/password authentication. Patrimony records, categories, and saved retirement calculations include `user_id` ownership and Row Level Security policies so authenticated users can access only their own rows.
 
-Before multi-user usage or public deployment, add `user_id`, enable RLS, and scope records/categories by authenticated user without changing UI components or application use-case contracts.
+Migration `006_add_user_scoping_and_rls.sql` assigns existing MVP data to `jascoba@gmail.com`. Change that email before running the migration in another environment.
 
 ## Supabase Auth setup
 
@@ -94,6 +94,7 @@ supabase/migrations/002_add_categories_and_category_records.sql
 supabase/migrations/003_drop_legacy_category_amount_columns.sql
 supabase/migrations/004_create_retirement_calculations.sql
 supabase/migrations/005_add_estimated_monthly_amount_to_retirement_calculations.sql
+supabase/migrations/006_add_user_scoping_and_rls.sql
 ```
 
 You can paste them into the Supabase SQL editor for the MVP, or run them through the Supabase CLI if the project is linked.
@@ -105,6 +106,8 @@ The third migration removes the early MVP category amount columns from `monthly_
 The fourth migration creates `retirement_calculations`, which stores only the compound-interest scenarios the user explicitly saves from the retirement calculator.
 
 The fifth migration adds `estimated_monthly_amount`, calculated as projected goal divided by years divided by 12.
+
+The sixth migration adds `user_id`, assigns existing data to the configured Supabase Auth user, enables RLS, and adds per-user policies for categories, patrimony records, and retirement calculations.
 
 If the app reports schema cache issues, run:
 
