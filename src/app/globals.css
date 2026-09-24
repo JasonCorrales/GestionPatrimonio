@@ -135,8 +135,71 @@ button {
   display: block;
 }
 
+.session-chip {
+  align-items: center;
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  display: flex;
+  gap: 12px;
+  padding: 8px 8px 8px 14px;
+}
+
+.session-chip span {
+  color: var(--muted);
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.session-chip button {
+  background: var(--foreground);
+  border: 0;
+  border-radius: 999px;
+  color: white;
+  font-weight: 800;
+  padding: 8px 12px;
+}
+
 .page-container {
   padding: 36px;
+}
+
+.auth-page {
+  align-items: center;
+  display: flex;
+  justify-content: center;
+  min-height: 100vh;
+  padding: 24px;
+}
+
+.auth-card {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 28px;
+  box-shadow: var(--shadow);
+  display: grid;
+  gap: 24px;
+  max-width: 460px;
+  padding: 32px;
+  width: 100%;
+}
+
+.auth-brand {
+  color: var(--foreground);
+}
+
+.auth-brand small {
+  color: var(--muted);
+}
+
+.auth-card h1 {
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1;
+  margin: 0 0 12px;
+}
+
+.compact-status {
+  max-width: 380px;
 }
 
 .content-stack {
@@ -392,7 +455,9 @@ button {
 
   .category-item,
   .record,
-  .section-title-row {
+  .section-title-row,
+  .session-chip,
+  .topbar {
     align-items: flex-start;
     flex-direction: column;
   }

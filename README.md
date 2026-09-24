@@ -11,6 +11,7 @@ Small web MVP for monthly patrimony tracking.
   - note
 - Navigate through a dashboard-style menu with separate record and category sections.
 - Maintain categories from the UI: list, create, edit, and delete.
+- Protect the dashboard with Supabase email/password login and logout.
 - Track the categories the user currently manages:
   - Inversion Bolsa
   - Certificados a Plazo
@@ -19,7 +20,7 @@ Small web MVP for monthly patrimony tracking.
   - Capital Social
 - Keep UI, business rules, and data access decoupled.
 - Use Supabase as the planned cloud database provider.
-- Authentication is intentionally out of scope for this deliverable and will be added later.
+- Authentication MVP is included with Supabase email/password; data is still shared until user scoping and RLS are added.
 
 ## Architecture
 
@@ -43,11 +44,15 @@ For local MVP behavior, `InMemoryPatrimonyRecordRepository` provides demo data w
 - default: in-memory demo repository
 - Supabase: only when `NEXT_PUBLIC_DATA_SOURCE=supabase` and the Supabase public variables are present
 
-## No-auth MVP warning
+## Authentication MVP warning
 
-This deliverable intentionally has no authentication. That means a client-side Supabase anon key can only write if the table allows public anon access, usually by leaving RLS disabled for the MVP.
+The dashboard is protected with Supabase email/password authentication. This is an MVP auth boundary only: patrimony records and categories are still shared because the schema does not yet include `user_id` or Row Level Security policies.
 
-That is acceptable only for a private MVP/testing setup. Before multi-user usage or public deployment, add authentication, enable RLS, and scope records by user without changing UI components or application use-case contracts.
+Before multi-user usage or public deployment, add `user_id`, enable RLS, and scope records/categories by authenticated user without changing UI components or application use-case contracts.
+
+## Supabase Auth setup
+
+Enable the Email provider in Supabase Auth and create at least one user for testing. The app uses `/login` for sign-in and the dashboard topbar for sign-out.
 
 ## Environment variables
 

@@ -7,7 +7,7 @@ Build a small web MVP to register monthly patrimony by category, using a layered
 - Stack: Next.js + TypeScript.
 - Initial persistence: cloud database.
 - Cloud provider: Supabase Postgres.
-- Authentication: intentionally out of scope for this deliverable; it will be added later.
+- Authentication: Supabase email/password MVP protects the dashboard; data remains shared until user scoping and RLS are added.
 
 ## Scope
 - Patrimony entries by date, category, amount, and note.
@@ -37,6 +37,7 @@ Build a small web MVP to register monthly patrimony by category, using a layered
 - [x] Add category maintenance actions: list, create, edit, delete.
 - [x] Add dashboard menu and split records/categories screens.
 - [x] Refresh visual design with dashboard shell, cards, metrics, and responsive layout.
+- [x] Add Supabase email/password login MVP with protected dashboard and logout; data remains shared until a later user-scoping/RLS migration.
 - [ ] Create `.env.example` if the harness safety policy allows that sensitive-looking path; README currently documents the same variables.
 
 ## Evidence
