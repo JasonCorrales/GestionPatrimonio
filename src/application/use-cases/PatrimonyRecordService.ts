@@ -49,6 +49,14 @@ export class PatrimonyRecordService {
 
     return this.repository.update(id, input);
   }
+
+  async deleteRecord(id: string): Promise<void> {
+    if (!id) {
+      throw new Error("Record id is required.");
+    }
+
+    await this.repository.delete(id);
+  }
 }
 
 export class PatrimonyRecordValidationException extends Error {

@@ -13,4 +13,5 @@ export interface PatrimonyRecordRepository {
   list(): Promise<MonthlyPatrimonyRecord[]>;
   save(input: PatrimonyRecordInput): Promise<MonthlyPatrimonyRecord>;
   update(id: string, input: PatrimonyRecordInput): Promise<MonthlyPatrimonyRecord>;
+  delete(id: string): Promise<void>;
 }

@@ -90,17 +90,41 @@ button {
   padding: 12px 14px;
 }
 
-.form button {
+.form-actions,
+.record-actions {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.form button,
+.record-actions button {
   background: var(--primary);
   border: 0;
   border-radius: 12px;
   color: white;
   font-weight: 700;
-  padding: 14px 16px;
+  padding: 12px 14px;
 }
 
-.form button:hover {
+.form button:hover,
+.record-actions button:hover {
   background: var(--primary-dark);
+}
+
+.form button.secondary-button {
+  background: transparent;
+  border: 1px solid var(--border);
+  color: var(--foreground);
+}
+
+.record-actions button.danger-button {
+  background: #c0352b;
+}
+
+.record-actions button.danger-button:hover {
+  background: #96251e;
 }
 
 .message,
@@ -122,6 +146,10 @@ button {
   justify-content: space-between;
   gap: 16px;
   padding: 16px;
+}
+
+.record-actions {
+  justify-content: flex-end;
 }
 
 .record p {

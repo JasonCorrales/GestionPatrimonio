@@ -91,6 +91,17 @@ export class SupabasePatrimonyRecordRepository
 
     return fromRecordRow(data);
   }
+
+  async delete(id: string): Promise<void> {
+    const { error } = await this.supabase
+      .from(RECORDS_TABLE_NAME)
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      throw error;
+    }
+  }
 }
 
 function fromRecordRow(row: PatrimonyRecordRow): MonthlyPatrimonyRecord {

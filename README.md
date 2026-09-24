@@ -4,7 +4,7 @@ Small web MVP for monthly patrimony tracking.
 
 ## Current scope
 
-- Register patrimony entries with four fields:
+- Register, edit, and delete patrimony entries with four fields:
   - date
   - category
   - amount

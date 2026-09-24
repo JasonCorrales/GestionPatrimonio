@@ -79,6 +79,15 @@ export class InMemoryPatrimonyRecordRepository
     return updated;
   }
 
+  async delete(id: string): Promise<void> {
+    const initialCount = this.records.length;
+    this.records = this.records.filter((record) => record.id !== id);
+
+    if (this.records.length === initialCount) {
+      throw new Error(`Patrimony record not found: ${id}`);
+    }
+  }
+
   private findCategory(categoryId: string) {
     const category = this.categories.find((item) => item.id === categoryId);
 
