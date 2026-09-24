@@ -217,6 +217,28 @@ button {
   padding: 32px;
 }
 
+.dashboard-heading {
+  align-items: center;
+  display: flex;
+  gap: 24px;
+  justify-content: space-between;
+}
+
+.month-filter {
+  display: grid;
+  gap: 8px;
+  font-weight: 800;
+  min-width: 220px;
+}
+
+.month-filter input {
+  background: white;
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  color: var(--foreground);
+  padding: 13px 14px;
+}
+
 .page-heading h1 {
   font-size: clamp(2rem, 4vw, 3.5rem);
   line-height: 1;
@@ -255,6 +277,10 @@ button {
 .category-page-grid,
 .retirement-grid {
   align-items: start;
+}
+
+.dashboard-grid {
+  align-items: stretch;
 }
 
 .metric-card,
@@ -459,6 +485,125 @@ button {
   line-height: 1;
 }
 
+.dashboard-card {
+  align-content: start;
+  display: grid;
+  gap: 20px;
+  height: 100%;
+}
+
+.chart-layout {
+  align-items: center;
+  display: grid;
+  gap: 28px;
+  grid-template-columns: 240px minmax(0, 1fr);
+}
+
+.donut-chart {
+  align-items: center;
+  border-radius: 50%;
+  display: flex;
+  height: 240px;
+  justify-content: center;
+  position: relative;
+  width: 240px;
+}
+
+.donut-chart::after {
+  background: white;
+  border-radius: 50%;
+  content: "";
+  height: 138px;
+  position: absolute;
+  width: 138px;
+}
+
+.donut-chart span {
+  font-size: 1.15rem;
+  font-weight: 900;
+  position: relative;
+  text-align: center;
+  z-index: 1;
+}
+
+.chart-legend {
+  display: grid;
+  gap: 12px;
+}
+
+.legend-item {
+  align-items: center;
+  display: flex;
+  gap: 12px;
+}
+
+.legend-item > span {
+  border-radius: 999px;
+  display: inline-flex;
+  height: 14px;
+  width: 14px;
+}
+
+.legend-item strong,
+.legend-item small {
+  display: block;
+}
+
+.legend-item small {
+  color: var(--muted);
+}
+
+.progress-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.progress-summary {
+  display: grid;
+  gap: 6px;
+}
+
+.progress-summary span,
+.progress-summary small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.progress-summary strong {
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1;
+}
+
+.progress-track {
+  background: var(--primary-soft);
+  border-radius: 999px;
+  height: 20px;
+  overflow: hidden;
+}
+
+.progress-track span {
+  background: linear-gradient(90deg, var(--primary), #32a6a6);
+  border-radius: inherit;
+  display: block;
+  height: 100%;
+}
+
+.progress-footer {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+}
+
+.progress-footer strong {
+  color: var(--primary-dark);
+  font-size: 1.4rem;
+}
+
+.progress-footer span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
 .record,
 .category-item {
   align-items: center;
@@ -513,9 +658,19 @@ button {
   .record,
   .section-title-row,
   .session-chip,
-  .topbar {
+  .topbar,
+  .dashboard-heading {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .chart-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .donut-chart {
+    height: 220px;
+    width: 220px;
   }
 
   .record-actions {

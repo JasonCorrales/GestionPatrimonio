@@ -40,6 +40,8 @@ Build a small web MVP to register monthly patrimony by category, using a layered
 - [x] Add Supabase email/password login MVP with protected dashboard and logout; data remains shared until a later user-scoping/RLS migration.
 - [x] Add retirement compound-interest calculator with hot calculations and persisted saved scenarios, including estimated monthly amount.
 - [x] Add user ownership and RLS for categories, patrimony records, and retirement calculations.
+- [x] Add optional category interest rate.
+- [x] Add main dashboard with monthly patrimony distribution and retirement goal progress.
 - [ ] Create `.env.example` if the harness safety policy allows that sensitive-looking path; README currently documents the same variables.
 
 ## Evidence

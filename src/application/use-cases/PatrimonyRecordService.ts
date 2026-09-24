@@ -118,8 +118,19 @@ function validatePatrimonyCategory(input: PatrimonyCategoryInput) {
   if (!input.name.trim()) {
     throw new Error("Category name is required.");
   }
+
+  if (
+    input.interestRate !== null &&
+    input.interestRate !== undefined &&
+    (!Number.isFinite(input.interestRate) || input.interestRate < 0)
+  ) {
+    throw new Error("Category interest rate must be zero or greater.");
+  }
 }
 
 function normalizeCategoryInput(input: PatrimonyCategoryInput): PatrimonyCategoryInput {
-  return { name: input.name.trim() };
+  return {
+    name: input.name.trim(),
+    interestRate: input.interestRate ?? null,
+  };
 }

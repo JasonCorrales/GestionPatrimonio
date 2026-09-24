@@ -9,12 +9,15 @@ import type { PatrimonyCategory } from "@/domain/patrimonyCategory";
 
 const RECORDS_TABLE_NAME = "monthly_patrimony_records";
 const CATEGORY_TABLE_NAME = "categoria";
+const CATEGORY_SELECT = "id, code, name, display_order, interest_rate";
+const RECORD_SELECT = `id, month, record_date, category_id, amount, notes, created_at, updated_at, categoria(${CATEGORY_SELECT})`;
 
 type CategoryRow = {
   id: string;
   code: string;
   name: string;
   display_order: number;
+  interest_rate: number | null;
 };
 
 type PatrimonyRecordRow = {
@@ -37,7 +40,7 @@ export class SupabasePatrimonyRecordRepository
   async listCategories(): Promise<PatrimonyCategory[]> {
     const { data, error } = await this.supabase
       .from(CATEGORY_TABLE_NAME)
-      .select("id, code, name, display_order")
+      .select(CATEGORY_SELECT)
       .order("display_order", { ascending: true });
 
     if (error) {
@@ -54,8 +57,9 @@ export class SupabasePatrimonyRecordRepository
         code: slugify(input.name),
         name: input.name,
         display_order: await this.nextCategoryDisplayOrder(),
+        interest_rate: input.interestRate ?? null,
       })
-      .select("id, code, name, display_order")
+      .select(CATEGORY_SELECT)
       .single();
 
     if (error) {
@@ -74,10 +78,11 @@ export class SupabasePatrimonyRecordRepository
       .update({
         code: slugify(input.name),
         name: input.name,
+        interest_rate: input.interestRate ?? null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", id)
-      .select("id, code, name, display_order")
+      .select(CATEGORY_SELECT)
       .single();
 
     if (error) {
@@ -101,7 +106,7 @@ export class SupabasePatrimonyRecordRepository
   async list(): Promise<MonthlyPatrimonyRecord[]> {
     const { data, error } = await this.supabase
       .from(RECORDS_TABLE_NAME)
-      .select("id, month, record_date, category_id, amount, notes, created_at, updated_at, categoria(id, code, name, display_order)")
+      .select(RECORD_SELECT)
       .not("category_id", "is", null)
       .order("record_date", { ascending: false });
 
@@ -117,7 +122,7 @@ export class SupabasePatrimonyRecordRepository
     const { data, error } = await this.supabase
       .from(RECORDS_TABLE_NAME)
       .insert(toInsertRow(input, now))
-      .select("id, month, record_date, category_id, amount, notes, created_at, updated_at, categoria(id, code, name, display_order)")
+      .select(RECORD_SELECT)
       .single();
 
     if (error) {
@@ -135,7 +140,7 @@ export class SupabasePatrimonyRecordRepository
       .from(RECORDS_TABLE_NAME)
       .update(toUpdateRow(input))
       .eq("id", id)
-      .select("id, month, record_date, category_id, amount, notes, created_at, updated_at, categoria(id, code, name, display_order)")
+      .select(RECORD_SELECT)
       .single();
 
     if (error) {
@@ -196,6 +201,7 @@ function fromCategoryRow(row: CategoryRow): PatrimonyCategory {
     code: row.code,
     name: row.name,
     displayOrder: row.display_order,
+    interestRate: row.interest_rate === null ? null : Number(row.interest_rate),
   };
 }
 

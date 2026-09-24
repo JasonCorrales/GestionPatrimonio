@@ -43,6 +43,7 @@ export class InMemoryPatrimonyRecordRepository
       code: slugify(input.name),
       name: input.name,
       displayOrder: nextDisplayOrder(this.categories),
+      interestRate: input.interestRate ?? null,
     };
 
     this.categories = [...this.categories, category];
@@ -60,6 +61,7 @@ export class InMemoryPatrimonyRecordRepository
       ...existing,
       code: slugify(input.name),
       name: input.name,
+      interestRate: input.interestRate ?? null,
     };
 
     this.categories = this.categories.map((category) =>

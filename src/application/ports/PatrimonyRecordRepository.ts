@@ -10,6 +10,7 @@ export type PatrimonyRecordInput = {
 
 export type PatrimonyCategoryInput = {
   name: string;
+  interestRate?: number | null;
 };
 
 export interface PatrimonyRecordRepository {

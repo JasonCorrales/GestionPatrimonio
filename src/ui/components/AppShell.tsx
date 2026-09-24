@@ -7,7 +7,8 @@ import type { Session } from "@supabase/supabase-js";
 import { getCurrentSession, onAuthStateChange, signOut } from "@/data/supabase/auth";
 
 const navigationItems = [
-  { href: "/", label: "Registros", description: "Alta e historial" },
+  { href: "/", label: "Dashboard", description: "Resumen mensual" },
+  { href: "/records", label: "Registros", description: "Alta e historial" },
   { href: "/categories", label: "Categorías", description: "Catálogo" },
   { href: "/retirement", label: "Jubilación", description: "Interés compuesto" },
 ];

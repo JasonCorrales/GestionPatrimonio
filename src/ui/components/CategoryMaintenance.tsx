@@ -14,6 +14,7 @@ export function CategoryMaintenance() {
     [],
   );
   const [categoryName, setCategoryName] = useState("");
+  const [categoryInterestRate, setCategoryInterestRate] = useState("");
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [categories, setCategories] = useState<PatrimonyCategory[]>([]);
   const [records, setRecords] = useState<PatrimonyRecordView[]>([]);
@@ -37,6 +38,7 @@ export function CategoryMaintenance() {
       if (editingCategoryId) {
         const updated = await service.updateCategory(editingCategoryId, {
           name: categoryName,
+          interestRate: parseOptionalNumber(categoryInterestRate),
         });
         setCategories((current) => sortCategories(current.map((category) =>
           category.id === updated.id ? updated : category,
@@ -51,7 +53,10 @@ export function CategoryMaintenance() {
         return;
       }
 
-      const created = await service.createCategory({ name: categoryName });
+      const created = await service.createCategory({
+        name: categoryName,
+        interestRate: parseOptionalNumber(categoryInterestRate),
+      });
       setCategories((current) => sortCategories([...current, created]));
       resetCategoryForm();
       setMessage("Categoría creada.");
@@ -63,6 +68,7 @@ export function CategoryMaintenance() {
   function startEditingCategory(category: PatrimonyCategory) {
     setEditingCategoryId(category.id);
     setCategoryName(category.name);
+    setCategoryInterestRate(category.interestRate?.toString() ?? "");
     setMessage("Editando la categoría seleccionada.");
   }
 
@@ -95,6 +101,7 @@ export function CategoryMaintenance() {
   function resetCategoryForm() {
     setEditingCategoryId(null);
     setCategoryName("");
+    setCategoryInterestRate("");
   }
 
   return (
@@ -120,6 +127,18 @@ export function CategoryMaintenance() {
               value={categoryName}
               onChange={(event) => setCategoryName(event.target.value)}
               placeholder="Ej. Bienes raíces"
+            />
+          </label>
+
+          <label>
+            % de interés anual esperado (opcional)
+            <input
+              min="0"
+              step="0.01"
+              type="number"
+              value={categoryInterestRate}
+              onChange={(event) => setCategoryInterestRate(event.target.value)}
+              placeholder="Ej. 8"
             />
           </label>
 
@@ -150,7 +169,10 @@ export function CategoryMaintenance() {
               <article key={category.id} className="category-item">
                 <div>
                   <strong>{category.name}</strong>
-                  <p>{recordsByCategory(category.id, records)} registros asociados</p>
+                  <p>
+                    {recordsByCategory(category.id, records)} registros asociados
+                    {category.interestRate !== null ? ` · ${category.interestRate}% interés` : ""}
+                  </p>
                 </div>
                 <div className="record-actions">
                   <button type="button" onClick={() => startEditingCategory(category)}>
@@ -191,6 +213,10 @@ function categoryHasRecords(categoryId: string, records: PatrimonyRecordView[]) 
 
 function recordsByCategory(categoryId: string, records: PatrimonyRecordView[]) {
   return records.filter((record) => record.category.id === categoryId).length;
+}
+
+function parseOptionalNumber(value: string) {
+  return value.trim() === "" ? null : Number(value);
 }
 
 function getErrorMessage(error: unknown) {
