@@ -252,7 +252,8 @@ button {
   grid-template-columns: minmax(320px, 0.85fr) minmax(0, 1.25fr);
 }
 
-.category-page-grid {
+.category-page-grid,
+.retirement-grid {
   align-items: start;
 }
 
@@ -277,6 +278,11 @@ button {
 
 .metric-card strong {
   font-size: clamp(1.5rem, 3vw, 2.2rem);
+}
+
+.highlight-card {
+  background: linear-gradient(135deg, #ffffff, #edf4ff);
+  border-color: rgba(36, 88, 211, 0.24);
 }
 
 .card {
@@ -401,6 +407,56 @@ button {
 .category-list {
   display: grid;
   gap: 12px;
+}
+
+.projection-card {
+  display: grid;
+  gap: 22px;
+}
+
+.summary-list {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+
+.summary-list div {
+  align-items: center;
+  background: var(--background-soft);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  display: flex;
+  justify-content: space-between;
+  padding: 14px;
+}
+
+.summary-list dt {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.summary-list dd {
+  font-weight: 900;
+  margin: 0;
+}
+
+.projection-result {
+  background: #0f1f38;
+  border-radius: 20px;
+  color: white;
+  display: grid;
+  gap: 10px;
+  padding: 22px;
+}
+
+.projection-result span {
+  color: #9fb1ca;
+  font-weight: 800;
+}
+
+.projection-result strong {
+  font-size: clamp(2rem, 4vw, 3.4rem);
+  line-height: 1;
 }
 
 .record,

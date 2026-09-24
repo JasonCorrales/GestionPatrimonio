@@ -12,6 +12,7 @@ Small web MVP for monthly patrimony tracking.
 - Navigate through a dashboard-style menu with separate record and category sections.
 - Maintain categories from the UI: list, create, edit, and delete.
 - Protect the dashboard with Supabase email/password login and logout.
+- Calculate retirement compound-interest scenarios live and persist selected saved calculations.
 - Track the categories the user currently manages:
   - Inversion Bolsa
   - Certificados a Plazo
@@ -91,6 +92,8 @@ Apply migrations in order:
 supabase/migrations/001_create_monthly_patrimony_records.sql
 supabase/migrations/002_add_categories_and_category_records.sql
 supabase/migrations/003_drop_legacy_category_amount_columns.sql
+supabase/migrations/004_create_retirement_calculations.sql
+supabase/migrations/005_add_estimated_monthly_amount_to_retirement_calculations.sql
 ```
 
 You can paste them into the Supabase SQL editor for the MVP, or run them through the Supabase CLI if the project is linked.
@@ -98,6 +101,10 @@ You can paste them into the Supabase SQL editor for the MVP, or run them through
 The second migration creates the `categoria` table, seeds the MVP categories, and adds row-based `record_date`, `category_id`, and `amount` fields to `monthly_patrimony_records`.
 
 The third migration removes the early MVP category amount columns from `monthly_patrimony_records`.
+
+The fourth migration creates `retirement_calculations`, which stores only the compound-interest scenarios the user explicitly saves from the retirement calculator.
+
+The fifth migration adds `estimated_monthly_amount`, calculated as projected goal divided by years divided by 12.
 
 If the app reports schema cache issues, run:
 

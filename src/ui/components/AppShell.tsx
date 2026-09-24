@@ -9,6 +9,7 @@ import { getCurrentSession, onAuthStateChange, signOut } from "@/data/supabase/a
 const navigationItems = [
   { href: "/", label: "Registros", description: "Alta e historial" },
   { href: "/categories", label: "Categorías", description: "Catálogo" },
+  { href: "/retirement", label: "Jubilación", description: "Interés compuesto" },
 ];
 
 export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
