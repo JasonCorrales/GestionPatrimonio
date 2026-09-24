@@ -1,5 +1,5 @@
-import { PatrimonyTracker } from "@/ui/components/PatrimonyTracker";
+import { PatrimonyRecords } from "@/ui/components/PatrimonyRecords";
 
 export default function Home() {
-  return <PatrimonyTracker />;
+  return <PatrimonyRecords />;
 }

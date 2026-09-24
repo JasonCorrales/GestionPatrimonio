@@ -9,6 +9,7 @@ Small web MVP for monthly patrimony tracking.
   - category
   - amount
   - note
+- Navigate through a dashboard-style menu with separate record and category sections.
 - Maintain categories from the UI: list, create, edit, and delete.
 - Track the categories the user currently manages:
   - Inversion Bolsa
@@ -25,7 +26,7 @@ Small web MVP for monthly patrimony tracking.
 ```text
 src/
   app/                Next.js App Router entry points
-  ui/                 React components and presentation concerns
+  ui/                 React components, dashboard shell, and presentation concerns
   domain/             Business concepts and pure domain helpers
   application/        Use cases, validation, and repository ports
   data/               Repository implementations and external data clients

@@ -35,6 +35,8 @@ Build a small web MVP to register monthly patrimony by category, using a layered
 - [x] Remove legacy category amount columns from schema and documentation.
 - [x] Add edit and delete actions for records in the history list.
 - [x] Add category maintenance actions: list, create, edit, delete.
+- [x] Add dashboard menu and split records/categories screens.
+- [x] Refresh visual design with dashboard shell, cards, metrics, and responsive layout.
 - [ ] Create `.env.example` if the harness safety policy allows that sensitive-looking path; README currently documents the same variables.
 
 ## Evidence
