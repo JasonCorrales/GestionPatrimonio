@@ -26,6 +26,8 @@ export function PatrimonyTracker() {
   const [amount, setAmount] = useState(0);
   const [notes, setNotes] = useState("");
   const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
+  const [categoryName, setCategoryName] = useState("");
+  const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [categories, setCategories] = useState<PatrimonyCategory[]>([]);
   const [records, setRecords] = useState<PatrimonyRecordView[]>([]);
   const [message, setMessage] = useState(
@@ -46,7 +48,7 @@ export function PatrimonyTracker() {
       });
   }, [service]);
 
-  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+  async function handleRecordSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
     try {
@@ -60,7 +62,7 @@ export function PatrimonyTracker() {
         setRecords((current) => sortRecords(current.map((record) =>
           record.id === updated.id ? updated : record,
         )));
-        resetForm();
+        resetRecordForm();
         setMessage("Patrimony record updated.");
         return;
       }
@@ -72,7 +74,7 @@ export function PatrimonyTracker() {
         notes,
       });
       setRecords((current) => sortRecords([created, ...current]));
-      resetForm({ keepCategory: true });
+      resetRecordForm({ keepCategory: true });
       setMessage(
         dataSource === "supabase"
           ? "Patrimony record saved in Supabase."
@@ -88,13 +90,50 @@ export function PatrimonyTracker() {
     }
   }
 
-  function startEditing(record: PatrimonyRecordView) {
+  async function handleCategorySubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    try {
+      if (editingCategoryId) {
+        const updated = await service.updateCategory(editingCategoryId, {
+          name: categoryName,
+        });
+        setCategories((current) => sortCategories(current.map((category) =>
+          category.id === updated.id ? updated : category,
+        )));
+        setRecords((current) => current.map((record) =>
+          record.category.id === updated.id
+            ? { ...record, category: updated }
+            : record,
+        ));
+        resetCategoryForm();
+        setMessage("Category updated.");
+        return;
+      }
+
+      const created = await service.createCategory({ name: categoryName });
+      setCategories((current) => sortCategories([...current, created]));
+      setCategoryId((current) => current || created.id);
+      resetCategoryForm();
+      setMessage("Category created.");
+    } catch (error) {
+      setMessage(`Unexpected error while saving the category: ${getErrorMessage(error)}`);
+    }
+  }
+
+  function startEditingRecord(record: PatrimonyRecordView) {
     setEditingRecordId(record.id);
     setRecordDate(record.recordDate);
     setCategoryId(record.category.id);
     setAmount(record.amount);
     setNotes(record.notes ?? "");
     setMessage("Editing selected patrimony record.");
+  }
+
+  function startEditingCategory(category: PatrimonyCategory) {
+    setEditingCategoryId(category.id);
+    setCategoryName(category.name);
+    setMessage("Editing selected category.");
   }
 
   async function deleteRecord(record: PatrimonyRecordView) {
@@ -111,7 +150,7 @@ export function PatrimonyTracker() {
       setRecords((current) => current.filter((item) => item.id !== record.id));
 
       if (editingRecordId === record.id) {
-        resetForm();
+        resetRecordForm();
       }
 
       setMessage("Patrimony record deleted.");
@@ -120,7 +159,40 @@ export function PatrimonyTracker() {
     }
   }
 
-  function resetForm(options?: { keepCategory?: boolean }) {
+  async function deleteCategory(category: PatrimonyCategory) {
+    if (categoryHasRecords(category.id, records)) {
+      setMessage("No se puede eliminar una categoría con registros asociados.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `¿Eliminar la categoría ${category.name}?`,
+    );
+
+    if (!confirmed) {
+      return;
+    }
+
+    try {
+      await service.deleteCategory(category.id);
+      const nextCategories = categories.filter((item) => item.id !== category.id);
+      setCategories(nextCategories);
+
+      if (categoryId === category.id) {
+        setCategoryId(nextCategories[0]?.id || "");
+      }
+
+      if (editingCategoryId === category.id) {
+        resetCategoryForm();
+      }
+
+      setMessage("Category deleted.");
+    } catch (error) {
+      setMessage(`Unexpected error while deleting the category: ${getErrorMessage(error)}`);
+    }
+  }
+
+  function resetRecordForm(options?: { keepCategory?: boolean }) {
     setEditingRecordId(null);
     setRecordDate(currentDate());
     setCategoryId((current) =>
@@ -128,6 +200,11 @@ export function PatrimonyTracker() {
     );
     setAmount(0);
     setNotes("");
+  }
+
+  function resetCategoryForm() {
+    setEditingCategoryId(null);
+    setCategoryName("");
   }
 
   return (
@@ -141,7 +218,7 @@ export function PatrimonyTracker() {
       </section>
 
       <section className="grid">
-        <form className="card form" onSubmit={handleSubmit}>
+        <form className="card form" onSubmit={handleRecordSubmit}>
           <h2>{editingRecordId ? "Editar registro" : "Nuevo registro"}</h2>
           <label>
             Mes
@@ -187,7 +264,7 @@ export function PatrimonyTracker() {
               {editingRecordId ? "Actualizar registro" : "Guardar registro"}
             </button>
             {editingRecordId ? (
-              <button className="secondary-button" type="button" onClick={() => resetForm()}>
+              <button className="secondary-button" type="button" onClick={() => resetRecordForm()}>
                 Cancelar edición
               </button>
             ) : null}
@@ -211,7 +288,7 @@ export function PatrimonyTracker() {
                   </div>
                   <div className="record-actions">
                     <strong>{currencyFormatter.format(record.amount)}</strong>
-                    <button type="button" onClick={() => startEditing(record)}>
+                    <button type="button" onClick={() => startEditingRecord(record)}>
                       Editar
                     </button>
                     <button
@@ -227,6 +304,60 @@ export function PatrimonyTracker() {
             </div>
           )}
         </section>
+      </section>
+
+      <section className="card category-maintenance">
+        <div>
+          <p className="eyebrow">Categorías</p>
+          <h2>Mantenimiento de categorías</h2>
+        </div>
+
+        <form className="form compact-form" onSubmit={handleCategorySubmit}>
+          <label>
+            Nombre de categoría
+            <input
+              value={categoryName}
+              onChange={(event) => setCategoryName(event.target.value)}
+              placeholder="Ej. Bienes raíces"
+            />
+          </label>
+          <div className="form-actions">
+            <button type="submit">
+              {editingCategoryId ? "Actualizar categoría" : "Agregar categoría"}
+            </button>
+            {editingCategoryId ? (
+              <button className="secondary-button" type="button" onClick={resetCategoryForm}>
+                Cancelar edición
+              </button>
+            ) : null}
+          </div>
+        </form>
+
+        <div className="category-list">
+          {categories.map((category) => (
+            <article key={category.id} className="category-item">
+              <span>{category.name}</span>
+              <div className="record-actions">
+                <button type="button" onClick={() => startEditingCategory(category)}>
+                  Editar
+                </button>
+                <button
+                  className="danger-button"
+                  disabled={categoryHasRecords(category.id, records)}
+                  title={
+                    categoryHasRecords(category.id, records)
+                      ? "No se puede eliminar una categoría con registros asociados."
+                      : undefined
+                  }
+                  type="button"
+                  onClick={() => deleteCategory(category)}
+                >
+                  Eliminar
+                </button>
+              </div>
+            </article>
+          ))}
+        </div>
       </section>
     </main>
   );
@@ -248,6 +379,16 @@ function sortRecords(records: PatrimonyRecordView[]) {
   return [...records].sort((left, right) =>
     right.recordDate.localeCompare(left.recordDate),
   );
+}
+
+function sortCategories(categories: PatrimonyCategory[]) {
+  return [...categories].sort((left, right) =>
+    left.displayOrder - right.displayOrder,
+  );
+}
+
+function categoryHasRecords(categoryId: string, records?: PatrimonyRecordView[]) {
+  return (records ?? []).some((record) => record.category.id === categoryId);
 }
 
 function getErrorMessage(error: unknown) {

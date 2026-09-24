@@ -9,6 +9,7 @@ Small web MVP for monthly patrimony tracking.
   - category
   - amount
   - note
+- Maintain categories from the UI: list, create, edit, and delete.
 - Track the categories the user currently manages:
   - Inversion Bolsa
   - Certificados a Plazo

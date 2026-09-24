@@ -12,10 +12,12 @@ export type PatrimonyCategory = {
   id: string;
   code: PatrimonyCategoryCode | string;
   name: string;
+  displayOrder: number;
 };
 
 export const DEMO_PATRIMONY_CATEGORIES: PatrimonyCategory[] =
-  PATRIMONY_CATEGORY_SEED.map((category) => ({
+  PATRIMONY_CATEGORY_SEED.map((category, index) => ({
     id: category.code,
+    displayOrder: index + 1,
     ...category,
   }));

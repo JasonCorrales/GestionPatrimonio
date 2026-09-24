@@ -1,6 +1,7 @@
 import type { MonthlyPatrimonyRecord } from "@/domain/monthlyPatrimonyRecord";
 import type { PatrimonyCategory } from "@/domain/patrimonyCategory";
 import type {
+  PatrimonyCategoryInput,
   PatrimonyRecordInput,
   PatrimonyRecordRepository,
 } from "../ports/PatrimonyRecordRepository";
@@ -17,6 +18,31 @@ export class PatrimonyRecordService {
 
   async listCategories(): Promise<PatrimonyCategory[]> {
     return this.repository.listCategories();
+  }
+
+  async createCategory(input: PatrimonyCategoryInput): Promise<PatrimonyCategory> {
+    validatePatrimonyCategory(input);
+    return this.repository.createCategory(normalizeCategoryInput(input));
+  }
+
+  async updateCategory(
+    id: string,
+    input: PatrimonyCategoryInput,
+  ): Promise<PatrimonyCategory> {
+    if (!id) {
+      throw new Error("Category id is required.");
+    }
+
+    validatePatrimonyCategory(input);
+    return this.repository.updateCategory(id, normalizeCategoryInput(input));
+  }
+
+  async deleteCategory(id: string): Promise<void> {
+    if (!id) {
+      throw new Error("Category id is required.");
+    }
+
+    await this.repository.deleteCategory(id);
   }
 
   async listRecords(): Promise<PatrimonyRecordView[]> {
@@ -86,4 +112,14 @@ export function validatePatrimonyRecord(
   }
 
   return errors;
+}
+
+function validatePatrimonyCategory(input: PatrimonyCategoryInput) {
+  if (!input.name.trim()) {
+    throw new Error("Category name is required.");
+  }
+}
+
+function normalizeCategoryInput(input: PatrimonyCategoryInput): PatrimonyCategoryInput {
+  return { name: input.name.trim() };
 }

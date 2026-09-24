@@ -1,5 +1,6 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import type {
+  PatrimonyCategoryInput,
   PatrimonyRecordInput,
   PatrimonyRecordRepository,
 } from "@/application/ports/PatrimonyRecordRepository";
@@ -13,6 +14,7 @@ type CategoryRow = {
   id: string;
   code: string;
   name: string;
+  display_order: number;
 };
 
 type PatrimonyRecordRow = {
@@ -35,7 +37,7 @@ export class SupabasePatrimonyRecordRepository
   async listCategories(): Promise<PatrimonyCategory[]> {
     const { data, error } = await this.supabase
       .from(CATEGORY_TABLE_NAME)
-      .select("id, code, name")
+      .select("id, code, name, display_order")
       .order("display_order", { ascending: true });
 
     if (error) {
@@ -45,10 +47,61 @@ export class SupabasePatrimonyRecordRepository
     return (data ?? []).map(fromCategoryRow);
   }
 
+  async createCategory(input: PatrimonyCategoryInput): Promise<PatrimonyCategory> {
+    const { data, error } = await this.supabase
+      .from(CATEGORY_TABLE_NAME)
+      .insert({
+        code: slugify(input.name),
+        name: input.name,
+        display_order: await this.nextCategoryDisplayOrder(),
+      })
+      .select("id, code, name, display_order")
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return fromCategoryRow(data);
+  }
+
+  async updateCategory(
+    id: string,
+    input: PatrimonyCategoryInput,
+  ): Promise<PatrimonyCategory> {
+    const { data, error } = await this.supabase
+      .from(CATEGORY_TABLE_NAME)
+      .update({
+        code: slugify(input.name),
+        name: input.name,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .select("id, code, name, display_order")
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return fromCategoryRow(data);
+  }
+
+  async deleteCategory(id: string): Promise<void> {
+    const { error } = await this.supabase
+      .from(CATEGORY_TABLE_NAME)
+      .delete()
+      .eq("id", id);
+
+    if (error) {
+      throw error;
+    }
+  }
+
   async list(): Promise<MonthlyPatrimonyRecord[]> {
     const { data, error } = await this.supabase
       .from(RECORDS_TABLE_NAME)
-      .select("id, month, record_date, category_id, amount, notes, created_at, updated_at, categoria(id, code, name)")
+      .select("id, month, record_date, category_id, amount, notes, created_at, updated_at, categoria(id, code, name, display_order)")
       .not("category_id", "is", null)
       .order("record_date", { ascending: false });
 
@@ -64,7 +117,7 @@ export class SupabasePatrimonyRecordRepository
     const { data, error } = await this.supabase
       .from(RECORDS_TABLE_NAME)
       .insert(toInsertRow(input, now))
-      .select("id, month, record_date, category_id, amount, notes, created_at, updated_at, categoria(id, code, name)")
+      .select("id, month, record_date, category_id, amount, notes, created_at, updated_at, categoria(id, code, name, display_order)")
       .single();
 
     if (error) {
@@ -82,7 +135,7 @@ export class SupabasePatrimonyRecordRepository
       .from(RECORDS_TABLE_NAME)
       .update(toUpdateRow(input))
       .eq("id", id)
-      .select("id, month, record_date, category_id, amount, notes, created_at, updated_at, categoria(id, code, name)")
+      .select("id, month, record_date, category_id, amount, notes, created_at, updated_at, categoria(id, code, name, display_order)")
       .single();
 
     if (error) {
@@ -101,6 +154,21 @@ export class SupabasePatrimonyRecordRepository
     if (error) {
       throw error;
     }
+  }
+
+  private async nextCategoryDisplayOrder() {
+    const { data, error } = await this.supabase
+      .from(CATEGORY_TABLE_NAME)
+      .select("display_order")
+      .order("display_order", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    return (data?.display_order ?? 0) + 1;
   }
 }
 
@@ -127,6 +195,7 @@ function fromCategoryRow(row: CategoryRow): PatrimonyCategory {
     id: row.id,
     code: row.code,
     name: row.name,
+    displayOrder: row.display_order,
   };
 }
 
@@ -151,4 +220,13 @@ function toUpdateRow(input: PatrimonyRecordInput) {
     notes: input.notes ?? null,
     updated_at: new Date().toISOString(),
   };
+}
+
+function slugify(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }

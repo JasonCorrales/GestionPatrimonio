@@ -34,6 +34,7 @@ Build a small web MVP to register monthly patrimony by category, using a layered
 - [x] Add `categoria` Supabase table migration and category select support.
 - [x] Remove legacy category amount columns from schema and documentation.
 - [x] Add edit and delete actions for records in the history list.
+- [x] Add category maintenance actions: list, create, edit, delete.
 - [ ] Create `.env.example` if the harness safety policy allows that sensitive-looking path; README currently documents the same variables.
 
 ## Evidence

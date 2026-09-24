@@ -1,4 +1,5 @@
 import type {
+  PatrimonyCategoryInput,
   PatrimonyRecordInput,
   PatrimonyRecordRepository,
 } from "@/application/ports/PatrimonyRecordRepository";
@@ -29,7 +30,61 @@ export class InMemoryPatrimonyRecordRepository
   private categories = [...DEMO_PATRIMONY_CATEGORIES];
 
   async listCategories(): Promise<PatrimonyCategory[]> {
-    return [...this.categories];
+    return [...this.categories].sort((left, right) =>
+      left.displayOrder - right.displayOrder,
+    );
+  }
+
+  async createCategory(input: PatrimonyCategoryInput): Promise<PatrimonyCategory> {
+    this.ensureUniqueCategoryName(input.name);
+
+    const category: PatrimonyCategory = {
+      id: crypto.randomUUID(),
+      code: slugify(input.name),
+      name: input.name,
+      displayOrder: nextDisplayOrder(this.categories),
+    };
+
+    this.categories = [...this.categories, category];
+    return category;
+  }
+
+  async updateCategory(
+    id: string,
+    input: PatrimonyCategoryInput,
+  ): Promise<PatrimonyCategory> {
+    const existing = this.findCategory(id);
+    this.ensureUniqueCategoryName(input.name, id);
+
+    const updated: PatrimonyCategory = {
+      ...existing,
+      code: slugify(input.name),
+      name: input.name,
+    };
+
+    this.categories = this.categories.map((category) =>
+      category.id === id ? updated : category,
+    );
+    this.records = this.records.map((record) =>
+      record.category.id === id ? { ...record, category: updated } : record,
+    );
+
+    return updated;
+  }
+
+  async deleteCategory(id: string): Promise<void> {
+    const hasRecords = this.records.some((record) => record.category.id === id);
+
+    if (hasRecords) {
+      throw new Error("Cannot delete a category that has patrimony records.");
+    }
+
+    const initialCount = this.categories.length;
+    this.categories = this.categories.filter((category) => category.id !== id);
+
+    if (this.categories.length === initialCount) {
+      throw new Error(`Patrimony category not found: ${id}`);
+    }
   }
 
   async list(): Promise<MonthlyPatrimonyRecord[]> {
@@ -97,4 +152,30 @@ export class InMemoryPatrimonyRecordRepository
 
     return category;
   }
+
+  private ensureUniqueCategoryName(name: string, currentId?: string) {
+    const normalizedName = name.toLocaleLowerCase();
+    const duplicated = this.categories.some(
+      (category) =>
+        category.id !== currentId &&
+        category.name.toLocaleLowerCase() === normalizedName,
+    );
+
+    if (duplicated) {
+      throw new Error(`Patrimony category already exists: ${name}`);
+    }
+  }
+}
+
+function nextDisplayOrder(categories: PatrimonyCategory[]) {
+  return Math.max(0, ...categories.map((category) => category.displayOrder)) + 1;
+}
+
+function slugify(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .toLocaleLowerCase()
+    .replace(/[^a-z0-9]+/g, "_")
+    .replace(/^_+|_+$/g, "");
 }

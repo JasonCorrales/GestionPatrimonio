@@ -8,8 +8,15 @@ export type PatrimonyRecordInput = {
   notes?: string;
 };
 
+export type PatrimonyCategoryInput = {
+  name: string;
+};
+
 export interface PatrimonyRecordRepository {
   listCategories(): Promise<PatrimonyCategory[]>;
+  createCategory(input: PatrimonyCategoryInput): Promise<PatrimonyCategory>;
+  updateCategory(id: string, input: PatrimonyCategoryInput): Promise<PatrimonyCategory>;
+  deleteCategory(id: string): Promise<void>;
   list(): Promise<MonthlyPatrimonyRecord[]>;
   save(input: PatrimonyRecordInput): Promise<MonthlyPatrimonyRecord>;
   update(id: string, input: PatrimonyRecordInput): Promise<MonthlyPatrimonyRecord>;
