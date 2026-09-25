@@ -186,7 +186,7 @@ function buildDistribution(records: PatrimonyRecordView[]): DistributionItem[] {
     };
     totals.set(record.category.id, {
       categoryName: current.categoryName,
-      amount: current.amount + record.amount,
+      amount: current.amount + record.amountCrc,
     });
   }
 

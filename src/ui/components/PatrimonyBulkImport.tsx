@@ -21,7 +21,8 @@ type ExcelRow = ExcelCell[];
 type HeaderMap = {
   date?: number;
   category?: number;
-  amount?: number;
+  amountCrc?: number;
+  amountUsd?: number;
   notes?: number;
 };
 
@@ -32,7 +33,7 @@ export function PatrimonyBulkImport({
 }: PatrimonyBulkImportProps) {
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState(
-    "Formato esperado: Fecha, Categoria, Monto, Nota. La nota es opcional.",
+    "Formato esperado: Fecha, Categoria, Monto CRC, Monto USD, Nota. Monto USD y nota son opcionales.",
   );
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -65,7 +66,7 @@ export function PatrimonyBulkImport({
         <p className="eyebrow">Carga masiva</p>
         <h2>Importar desde Excel</h2>
         <p className="muted">
-          Usá una hoja con encabezados <strong>Fecha</strong>, <strong>Categoria</strong>, <strong>Monto</strong> y <strong>Nota</strong>. La categoría debe existir en el catálogo.
+          Usá una hoja con encabezados <strong>Fecha</strong>, <strong>Categoria</strong>, <strong>Monto CRC</strong>, <strong>Monto USD</strong> y <strong>Nota</strong>. La categoría debe existir en el catálogo.
         </p>
       </div>
 
@@ -79,8 +80,12 @@ export function PatrimonyBulkImport({
           <span>Texto exacto de una categoría existente. Ejemplo: Inversion Bolsa.</span>
         </div>
         <div>
-          <strong>Monto</strong>
-          <span>Número positivo sin símbolo de moneda. Ejemplo: 100000.</span>
+          <strong>Monto CRC</strong>
+          <span>Número positivo en colones sin símbolo de moneda. Ejemplo: 100000.</span>
+        </div>
+        <div>
+          <strong>Monto USD</strong>
+          <span>Opcional. Número positivo en dólares sin símbolo. Ejemplo: 200.</span>
         </div>
         <div>
           <strong>Nota</strong>
@@ -114,8 +119,8 @@ function parseRows(rows: ExcelRow[], categories: PatrimonyCategory[]): Patrimony
   const [headerRow, ...dataRows] = rows;
   const headerMap = mapHeaders(headerRow);
 
-  if (headerMap.date === undefined || headerMap.category === undefined || headerMap.amount === undefined) {
-    throw new Error("Faltan columnas requeridas: Fecha, Categoria y Monto.");
+  if (headerMap.date === undefined || headerMap.category === undefined || headerMap.amountCrc === undefined) {
+    throw new Error("Faltan columnas requeridas: Fecha, Categoria y Monto CRC.");
   }
 
   const categoriesByName = new Map(
@@ -136,16 +141,24 @@ function parseRows(rows: ExcelRow[], categories: PatrimonyCategory[]): Patrimony
       throw new Error(`Fila ${rowNumber}: categoría no encontrada: ${categoryName}`);
     }
 
-    const amount = parseAmount(row[headerMap.amount!]);
+    const amountCrc = parseAmount(row[headerMap.amountCrc!]);
+    const amountUsd = headerMap.amountUsd === undefined
+      ? null
+      : parseOptionalAmount(row[headerMap.amountUsd]);
 
-    if (!Number.isFinite(amount) || amount < 0) {
-      throw new Error(`Fila ${rowNumber}: monto inválido.`);
+    if (!Number.isFinite(amountCrc) || amountCrc < 0) {
+      throw new Error(`Fila ${rowNumber}: monto CRC inválido.`);
+    }
+
+    if (amountUsd !== null && (!Number.isFinite(amountUsd) || amountUsd < 0)) {
+      throw new Error(`Fila ${rowNumber}: monto USD inválido.`);
     }
 
     parsedRows.push({
       recordDate: parseDate(row[headerMap.date!], rowNumber),
       categoryId: category.id,
-      amount,
+      amountCrc,
+      amountUsd,
       notes: headerMap.notes === undefined ? undefined : String(row[headerMap.notes] ?? "") || undefined,
     });
   });
@@ -171,8 +184,12 @@ function mapHeaders(headerRow: ExcelRow): HeaderMap {
       headerMap.category = index;
     }
 
-    if (["monto", "amount", "valor", "balance"].includes(header)) {
-      headerMap.amount = index;
+    if (["monto crc", "monto_crc", "amount crc", "amount_crc", "monto", "amount", "valor", "balance"].includes(header)) {
+      headerMap.amountCrc = index;
+    }
+
+    if (["monto usd", "monto_usd", "amount usd", "amount_usd", "usd"].includes(header)) {
+      headerMap.amountUsd = index;
     }
 
     if (["nota", "notas", "note", "notes"].includes(header)) {
@@ -219,6 +236,14 @@ function parseAmount(value: ExcelCell) {
   }
 
   return Number.NaN;
+}
+
+function parseOptionalAmount(value: ExcelCell) {
+  if (value === null || value === "") {
+    return null;
+  }
+
+  return parseAmount(value);
 }
 
 function excelSerialDateToIso(serial: number) {

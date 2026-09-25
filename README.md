@@ -7,9 +7,10 @@ Small web MVP for monthly patrimony tracking.
 - Register, edit, delete, and bulk import patrimony entries with four fields:
   - date
   - category
-  - amount
+  - amount CRC
+  - optional amount USD
   - note
-- Import patrimony records from Excel using columns `Fecha`, `Categoria`, `Monto`, and optional `Nota`; an empty template is available at `public/templates/patrimony-records-template.xlsx`.
+- Import patrimony records from Excel using columns `Fecha`, `Categoria`, `Monto CRC`, optional `Monto USD`, and optional `Nota`; an empty template is available at `public/templates/patrimony-records-template.xlsx`.
 - Navigate through a dashboard-style menu with a main dashboard plus separate record and category sections.
 - Maintain categories from the UI: list, create, edit, delete, and optional expected annual interest rate.
 - Protect the dashboard with Supabase email/password login and logout.
@@ -99,11 +100,12 @@ supabase/migrations/004_create_retirement_calculations.sql
 supabase/migrations/005_add_estimated_monthly_amount_to_retirement_calculations.sql
 supabase/migrations/006_add_user_scoping_and_rls.sql
 supabase/migrations/007_add_category_interest_rate.sql
+supabase/migrations/008_rename_category_and_add_usd_amount.sql
 ```
 
 You can paste them into the Supabase SQL editor for the MVP, or run them through the Supabase CLI if the project is linked.
 
-The second migration creates the `categoria` table, seeds the MVP categories, and adds row-based `record_date`, `category_id`, and `amount` fields to `monthly_patrimony_records`.
+The second migration creates the initial category table, seeds the MVP categories, and adds row-based `record_date`, `category_id`, and amount fields to `monthly_patrimony_records`.
 
 The third migration removes the early MVP category amount columns from `monthly_patrimony_records`.
 
@@ -114,6 +116,8 @@ The fifth migration adds `estimated_monthly_amount`, calculated as projected goa
 The sixth migration adds `user_id`, assigns existing data to the configured Supabase Auth user, enables RLS, and adds per-user policies for categories, patrimony records, and retirement calculations.
 
 The seventh migration adds optional `interest_rate` to categories.
+
+The eighth migration renames `categoria` to `category`, renames `amount` to `amount_crc`, adds optional `amount_usd`, and refreshes RLS policies that reference the category table.
 
 If the app reports schema cache issues, run:
 

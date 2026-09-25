@@ -44,6 +44,7 @@ Build a small web MVP to register monthly patrimony by category, using a layered
 - [x] Add main dashboard with monthly patrimony distribution and retirement goal progress.
 - [x] Add Excel bulk import for patrimony records with Fecha, Categoria, Monto, Nota columns.
 - [x] Add light/dark theme selector in the topbar.
+- [x] Rename `categoria` table to `category`, rename `amount` to `amount_crc`, and add optional `amount_usd`.
 - [ ] Create `.env.example` if the harness safety policy allows that sensitive-looking path; README currently documents the same variables.
 
 ## Evidence

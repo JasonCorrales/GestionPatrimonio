@@ -114,10 +114,21 @@ export function validatePatrimonyRecord(
     errors.push({ field: "categoryId", message: "Category is required." });
   }
 
-  if (!Number.isFinite(input.amount) || input.amount < 0) {
+  if (!Number.isFinite(input.amountCrc) || input.amountCrc < 0) {
     errors.push({
-      field: "amount",
-      message: "Amount must be a positive number or zero.",
+      field: "amountCrc",
+      message: "CRC amount must be a positive number or zero.",
+    });
+  }
+
+  if (
+    input.amountUsd !== null &&
+    input.amountUsd !== undefined &&
+    (!Number.isFinite(input.amountUsd) || input.amountUsd < 0)
+  ) {
+    errors.push({
+      field: "amountUsd",
+      message: "USD amount must be a positive number or zero.",
     });
   }
 

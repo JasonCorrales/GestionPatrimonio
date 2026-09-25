@@ -27,7 +27,8 @@ export function PatrimonyRecords() {
   const [activeTab, setActiveTab] = useState<RecordsTab>("entry");
   const [recordDate, setRecordDate] = useState(currentDate());
   const [categoryId, setCategoryId] = useState("");
-  const [amount, setAmount] = useState(0);
+  const [amountCrc, setAmountCrc] = useState(0);
+  const [amountUsd, setAmountUsd] = useState("");
   const [notes, setNotes] = useState("");
   const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
   const [categories, setCategories] = useState<PatrimonyCategory[]>([]);
@@ -58,7 +59,8 @@ export function PatrimonyRecords() {
         const updated = await service.updateRecord(editingRecordId, {
           recordDate,
           categoryId,
-          amount,
+          amountCrc,
+          amountUsd: parseOptionalNumber(amountUsd),
           notes,
         });
         setRecords((current) => sortRecords(current.map((record) =>
@@ -73,7 +75,8 @@ export function PatrimonyRecords() {
       const created = await service.createRecord({
         recordDate,
         categoryId,
-        amount,
+        amountCrc,
+        amountUsd: parseOptionalNumber(amountUsd),
         notes,
       });
       setRecords((current) => sortRecords([created, ...current]));
@@ -97,7 +100,8 @@ export function PatrimonyRecords() {
     setEditingRecordId(record.id);
     setRecordDate(record.recordDate);
     setCategoryId(record.category.id);
-    setAmount(record.amount);
+    setAmountCrc(record.amountCrc);
+    setAmountUsd(record.amountUsd?.toString() ?? "");
     setNotes(record.notes ?? "");
     setActiveTab("entry");
     setMessage("Editando el registro seleccionado.");
@@ -132,7 +136,8 @@ export function PatrimonyRecords() {
     setCategoryId((current) =>
       options?.keepCategory ? current : categories[0]?.id || "",
     );
-    setAmount(0);
+    setAmountCrc(0);
+    setAmountUsd("");
     setNotes("");
   }
 
@@ -214,13 +219,25 @@ export function PatrimonyRecords() {
             </label>
 
             <label>
-              Monto
+              Monto CRC
               <input
                 min="0"
                 step="0.01"
                 type="number"
-                value={amount}
-                onChange={(event) => setAmount(Number(event.target.value || 0))}
+                value={amountCrc}
+                onChange={(event) => setAmountCrc(Number(event.target.value || 0))}
+              />
+            </label>
+
+            <label>
+              Monto USD (opcional)
+              <input
+                min="0"
+                step="0.01"
+                type="number"
+                value={amountUsd}
+                onChange={(event) => setAmountUsd(event.target.value)}
+                placeholder="Ej. 100"
               />
             </label>
 
@@ -276,7 +293,8 @@ export function PatrimonyRecords() {
                     </p>
                   </div>
                   <div className="record-actions">
-                    <strong>{currencyFormatter.format(record.amount)}</strong>
+                    <strong>{currencyFormatter.format(record.amountCrc)}</strong>
+                    {record.amountUsd !== null ? <span>USD {record.amountUsd.toLocaleString("en-US")}</span> : null}
                     <button type="button" onClick={() => startEditingRecord(record)}>
                       Editar
                     </button>
@@ -317,7 +335,11 @@ function sortRecords(records: PatrimonyRecordView[]) {
 }
 
 function totalAmount(records: PatrimonyRecordView[]) {
-  return records.reduce((total, record) => total + record.amount, 0);
+  return records.reduce((total, record) => total + record.amountCrc, 0);
+}
+
+function parseOptionalNumber(value: string) {
+  return value.trim() === "" ? null : Number(value);
 }
 
 function getErrorMessage(error: unknown) {
