@@ -772,6 +772,83 @@ button {
   gap: 18px;
 }
 
+.line-chart-card {
+  overflow: hidden;
+}
+
+.line-chart-layout {
+  display: grid;
+  gap: 18px;
+}
+
+.line-chart-shell {
+  background: var(--background-soft);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  overflow-x: auto;
+  padding: 12px;
+}
+
+.line-chart {
+  display: block;
+  min-width: 620px;
+  width: 100%;
+}
+
+.line-chart-axis {
+  stroke: var(--border);
+  stroke-width: 2;
+}
+
+.line-chart-area {
+  fill: color-mix(in srgb, var(--primary) 18%, transparent);
+}
+
+.line-chart-line {
+  fill: none;
+  stroke: var(--primary);
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  stroke-width: 4;
+}
+
+.line-chart-point {
+  fill: var(--primary);
+  stroke: var(--card);
+  stroke-width: 3;
+}
+
+.line-chart-label {
+  fill: var(--muted);
+  font-size: 0.8rem;
+  font-weight: 800;
+}
+
+.line-chart-summary {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.line-chart-summary div {
+  background: var(--background-soft);
+  border: 1px solid var(--border);
+  border-radius: 16px;
+  display: grid;
+  gap: 4px;
+  padding: 14px;
+}
+
+.line-chart-summary span,
+.line-chart-summary small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.line-chart-summary strong {
+  font-size: 1.05rem;
+}
+
 .progress-summary {
   display: grid;
   gap: 6px;
