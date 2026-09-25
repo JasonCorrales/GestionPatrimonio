@@ -48,14 +48,14 @@ export function DashboardHome() {
   }, [patrimonyService, retirementService]);
 
   const selectedMonth = selectedDate.slice(0, 7);
-  const monthlyRecords = records.filter((record) => record.recordDate.startsWith(selectedMonth));
-  const distribution = buildDistribution(monthlyRecords, displayRecordAmount);
-  const monthlyTotal = distribution.reduce((total, item) => total + item.amount, 0);
+  const cumulativeRecords = records.filter((record) => record.recordDate.slice(0, 7) <= selectedMonth);
+  const distribution = buildDistribution(cumulativeRecords, displayRecordAmount);
+  const cumulativeTotal = distribution.reduce((total, item) => total + item.amount, 0);
   const retirementTarget = displayCrcAmount(retirementGoal?.finalAmount ?? 0);
   const retirementProgress = retirementTarget > 0
-    ? Math.min(100, (monthlyTotal / retirementTarget) * 100)
+    ? Math.min(100, (cumulativeTotal / retirementTarget) * 100)
     : 0;
-  const retirementGap = Math.max(0, retirementTarget - monthlyTotal);
+  const retirementGap = Math.max(0, retirementTarget - cumulativeTotal);
 
   return (
     <div className="content-stack">
@@ -64,7 +64,7 @@ export function DashboardHome() {
           <p className="eyebrow">Dashboard</p>
           <h1>Resumen patrimonial</h1>
           <p>
-            Visualizá la distribución mensual de tu patrimonio y el avance contra tu última meta de jubilación guardada.
+            Visualizá tu patrimonio acumulado hasta el mes seleccionado y el avance contra tu última meta de jubilación guardada.
           </p>
         </div>
         <label className="month-filter">
@@ -74,14 +74,14 @@ export function DashboardHome() {
             value={selectedDate}
             onChange={(event) => setSelectedDate(event.target.value || currentDate())}
           />
-          <span>El dashboard usa el mes de la fecha seleccionada.</span>
+          <span>El dashboard acumula registros hasta el mes de la fecha seleccionada.</span>
         </label>
       </section>
 
       <section className="metrics-grid">
         <article className="metric-card highlight-card">
-          <span>Patrimonio del mes</span>
-          <strong>{formatCurrency(monthlyTotal)}</strong>
+          <span>Patrimonio acumulado</span>
+          <strong>{formatCurrency(cumulativeTotal)}</strong>
         </article>
         <article className="metric-card">
           <span>Meta jubilación</span>
@@ -98,13 +98,13 @@ export function DashboardHome() {
           <div className="section-title-row">
             <div>
               <p className="eyebrow">Distribución</p>
-              <h2>Patrimonio por categoría</h2>
+              <h2>Patrimonio acumulado por categoría</h2>
             </div>
             <span className="pill">{formatMonth(selectedMonth)}</span>
           </div>
 
           {distribution.length === 0 ? (
-            <p className="empty-state">No hay registros para este mes.</p>
+            <p className="empty-state">No hay registros hasta este mes.</p>
           ) : (
             <div className="chart-layout">
               <div
@@ -113,7 +113,7 @@ export function DashboardHome() {
                 role="img"
                 style={{ background: buildDonutGradient(distribution) }}
               >
-                <span>{formatCurrency(monthlyTotal)}</span>
+                <span>{formatCurrency(cumulativeTotal)}</span>
               </div>
 
               <div className="chart-legend">
@@ -143,7 +143,7 @@ export function DashboardHome() {
             <div className="progress-panel">
               <div className="progress-summary">
                 <span>Llevás</span>
-                <strong>{formatCurrency(monthlyTotal)}</strong>
+                <strong>{formatCurrency(cumulativeTotal)}</strong>
                 <small>de {formatCurrency(retirementTarget)}</small>
               </div>
               <div className="progress-track">
