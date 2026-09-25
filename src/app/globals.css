@@ -532,6 +532,50 @@ button {
   gap: 12px;
 }
 
+.history-controls {
+  align-items: end;
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(180px, 1fr));
+  margin-bottom: 14px;
+}
+
+.history-summary-row,
+.pagination-controls {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-weight: 800;
+  gap: 12px;
+  justify-content: space-between;
+  margin-bottom: 14px;
+}
+
+.pagination-controls {
+  justify-content: center;
+  margin: 18px 0 0;
+}
+
+.pagination-controls button {
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: var(--foreground);
+  font-weight: 800;
+  padding: 10px 14px;
+}
+
+.pagination-controls button:not(:disabled):hover {
+  border-color: var(--primary);
+  color: var(--primary-dark);
+}
+
+.pagination-controls button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .projection-card {
   display: grid;
   gap: 22px;
@@ -834,6 +878,10 @@ button {
   .tabs {
     align-items: flex-start;
     flex-direction: column;
+  }
+
+  .history-controls {
+    grid-template-columns: 1fr;
   }
 
   .chart-layout {
