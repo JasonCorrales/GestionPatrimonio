@@ -12,7 +12,7 @@ Small web MVP for monthly patrimony tracking.
   - optional amount USD
   - note
 - Import patrimony records from Excel using columns `Fecha`, `Categoria`, `Tipo de movimiento`, `Monto CRC`, optional `Monto USD`, and optional `Nota`; an empty template is available at `public/templates/patrimony-records-template.xlsx`.
-- Filter the records history by exact date or category, and paginate it in pages of 10, 25, or 50 records.
+- Filter the records history by exact date, category, or movement type, and paginate it in pages of 10, 25, or 50 records.
 - Navigate through a dashboard-style menu with a main dashboard plus separate record and category sections.
 - Maintain categories from the UI: list, create, edit, delete, and optional expected annual interest rate.
 - Protect the dashboard with Supabase email/password login and logout.

@@ -14,6 +14,7 @@ import { PatrimonyBulkImport } from "./PatrimonyBulkImport";
 
 type RecordsTab = "entry" | "history";
 type MovementTypeFormValue = PatrimonyMovementType | "";
+type MovementTypeFilterValue = PatrimonyMovementType | "all";
 
 export function PatrimonyRecords() {
   const service = useMemo(
@@ -33,6 +34,7 @@ export function PatrimonyRecords() {
   const [records, setRecords] = useState<PatrimonyRecordView[]>([]);
   const [historyDateFilter, setHistoryDateFilter] = useState("");
   const [historyCategoryFilter, setHistoryCategoryFilter] = useState("all");
+  const [historyMovementTypeFilter, setHistoryMovementTypeFilter] = useState<MovementTypeFilterValue>("all");
   const [historyPageSize, setHistoryPageSize] = useState(10);
   const [historyPage, setHistoryPage] = useState(1);
   const { displayRecordAmount, formatCurrency, formatRecordAmount, formatUsd } = useCurrencyPreference();
@@ -58,10 +60,12 @@ export function PatrimonyRecords() {
     () => records.filter((record) => {
       const matchesDate = historyDateFilter === "" || record.recordDate === historyDateFilter;
       const matchesCategory = historyCategoryFilter === "all" || record.category.id === historyCategoryFilter;
+      const matchesMovementType = historyMovementTypeFilter === "all"
+        || record.movementType === historyMovementTypeFilter;
 
-      return matchesDate && matchesCategory;
+      return matchesDate && matchesCategory && matchesMovementType;
     }),
-    [historyCategoryFilter, historyDateFilter, records],
+    [historyCategoryFilter, historyDateFilter, historyMovementTypeFilter, records],
   );
   const historyTotalPages = Math.max(1, Math.ceil(filteredHistoryRecords.length / historyPageSize));
   const currentHistoryPage = Math.min(historyPage, historyTotalPages);
@@ -366,6 +370,20 @@ export function PatrimonyRecords() {
                         {category.name}
                       </option>
                     ))}
+                  </select>
+                </label>
+                <label>
+                  Filtrar por tipo
+                  <select
+                    value={historyMovementTypeFilter}
+                    onChange={(event) => {
+                      setHistoryMovementTypeFilter(event.target.value as MovementTypeFilterValue);
+                      setHistoryPage(1);
+                    }}
+                  >
+                    <option value="all">Todos los tipos</option>
+                    <option value="contribution">Aporte</option>
+                    <option value="interest">Interés</option>
                   </select>
                 </label>
                 <label>
