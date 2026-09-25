@@ -4,7 +4,8 @@ export type MonthlyPatrimonyRecord = {
   id: string;
   recordDate: string;
   category: PatrimonyCategory;
-  amount: number;
+  amountCrc: number;
+  amountUsd: number | null;
   notes?: string;
   createdAt: string;
   updatedAt: string;

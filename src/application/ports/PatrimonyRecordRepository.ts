@@ -4,7 +4,8 @@ import type { PatrimonyCategory } from "@/domain/patrimonyCategory";
 export type PatrimonyRecordInput = {
   recordDate: string;
   categoryId: string;
-  amount: number;
+  amountCrc: number;
+  amountUsd?: number | null;
   notes?: string;
 };
 

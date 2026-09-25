@@ -8,9 +8,9 @@ import type { MonthlyPatrimonyRecord } from "@/domain/monthlyPatrimonyRecord";
 import type { PatrimonyCategory } from "@/domain/patrimonyCategory";
 
 const RECORDS_TABLE_NAME = "monthly_patrimony_records";
-const CATEGORY_TABLE_NAME = "categoria";
+const CATEGORY_TABLE_NAME = "category";
 const CATEGORY_SELECT = "id, code, name, display_order, interest_rate";
-const RECORD_SELECT = `id, month, record_date, category_id, amount, notes, created_at, updated_at, categoria(${CATEGORY_SELECT})`;
+const RECORD_SELECT = `id, month, record_date, category_id, amount_crc, amount_usd, notes, created_at, updated_at, category(${CATEGORY_SELECT})`;
 
 type CategoryRow = {
   id: string;
@@ -25,11 +25,12 @@ type PatrimonyRecordRow = {
   month: string;
   record_date: string;
   category_id: string;
-  amount: number;
+  amount_crc: number;
+  amount_usd: number | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
-  categoria: CategoryRow | CategoryRow[] | null;
+  category: CategoryRow | CategoryRow[] | null;
 };
 
 export class SupabasePatrimonyRecordRepository
@@ -178,7 +179,7 @@ export class SupabasePatrimonyRecordRepository
 }
 
 function fromRecordRow(row: PatrimonyRecordRow): MonthlyPatrimonyRecord {
-  const category = Array.isArray(row.categoria) ? row.categoria[0] : row.categoria;
+  const category = Array.isArray(row.category) ? row.category[0] : row.category;
 
   if (!category) {
     throw new Error(`Patrimony record ${row.id} has no category.`);
@@ -188,7 +189,8 @@ function fromRecordRow(row: PatrimonyRecordRow): MonthlyPatrimonyRecord {
     id: row.id,
     recordDate: row.record_date,
     category: fromCategoryRow(category),
-    amount: Number(row.amount),
+    amountCrc: Number(row.amount_crc),
+    amountUsd: row.amount_usd === null ? null : Number(row.amount_usd),
     notes: row.notes ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -210,7 +212,8 @@ function toInsertRow(input: PatrimonyRecordInput, now: string) {
     month: input.recordDate.slice(0, 7),
     record_date: input.recordDate,
     category_id: input.categoryId,
-    amount: input.amount,
+    amount_crc: input.amountCrc,
+    amount_usd: input.amountUsd ?? null,
     notes: input.notes ?? null,
     created_at: now,
     updated_at: now,
@@ -222,7 +225,8 @@ function toUpdateRow(input: PatrimonyRecordInput) {
     month: input.recordDate.slice(0, 7),
     record_date: input.recordDate,
     category_id: input.categoryId,
-    amount: input.amount,
+    amount_crc: input.amountCrc,
+    amount_usd: input.amountUsd ?? null,
     notes: input.notes ?? null,
     updated_at: new Date().toISOString(),
   };
