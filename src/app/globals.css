@@ -329,6 +329,12 @@ button {
   padding: 13px 14px;
 }
 
+.month-filter span {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
 .page-heading h1 {
   font-size: clamp(2rem, 4vw, 3.5rem);
   line-height: 1;
