@@ -103,6 +103,17 @@ export function PatrimonyRecords() {
     setMessage("Editando el registro seleccionado.");
   }
 
+  function startDuplicatingRecord(record: PatrimonyRecordView) {
+    setEditingRecordId(null);
+    setRecordDate(record.recordDate);
+    setCategoryId(record.category.id);
+    setAmountCrc(record.amountCrc);
+    setAmountUsd(record.amountUsd?.toString() ?? "");
+    setNotes(record.notes ?? "");
+    setActiveTab("entry");
+    setMessage("Registro duplicado en el formulario. Revisá los datos y guardalo como nuevo registro.");
+  }
+
   async function deleteRecord(record: PatrimonyRecordView) {
     const confirmed = window.confirm(
       `¿Eliminar el registro de ${record.category.name} del ${formatDate(record.recordDate)}?`,
@@ -293,6 +304,9 @@ export function PatrimonyRecords() {
                     {record.amountUsd !== null ? <span>Monto USD fuente {formatUsd(record.amountUsd)}</span> : null}
                     <button type="button" onClick={() => startEditingRecord(record)}>
                       Editar
+                    </button>
+                    <button type="button" onClick={() => startDuplicatingRecord(record)}>
+                      Duplicar
                     </button>
                     <button
                       className="danger-button"

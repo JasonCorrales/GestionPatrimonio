@@ -4,7 +4,7 @@ Small web MVP for monthly patrimony tracking.
 
 ## Current scope
 
-- Register, edit, delete, and bulk import patrimony entries with four fields:
+- Register, duplicate from history, edit, delete, and bulk import patrimony entries with four fields:
   - date
   - category
   - amount CRC
