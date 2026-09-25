@@ -5,6 +5,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState, type ReactNode } from "react";
 import type { Session } from "@supabase/supabase-js";
 import { getCurrentSession, onAuthStateChange, signOut } from "@/data/supabase/auth";
+import { CurrencyPreferenceProvider, useCurrencyPreference, type DisplayCurrency } from "@/ui/currency";
 
 const navigationItems = [
   { href: "/", label: "Dashboard", description: "Resumen mensual" },
@@ -109,8 +110,9 @@ export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
   }
 
   return (
-    <div className="app-shell">
-      <aside className="sidebar">
+    <CurrencyPreferenceProvider>
+      <div className="app-shell">
+        <aside className="sidebar">
         <Link className="brand" href="/">
           <span className="brand-mark">GP</span>
           <span>
@@ -136,15 +138,16 @@ export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
             );
           })}
         </nav>
-      </aside>
+        </aside>
 
-      <div className="app-main">
+        <div className="app-main">
         <header className="topbar">
           <div>
             <span className="topbar-kicker">Control financiero personal</span>
             <strong>Patrimonio mensual</strong>
           </div>
           <div className="topbar-actions">
+            <CurrencyPreferenceControls />
             <button
               aria-label={theme === "light" ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
               className="theme-toggle"
@@ -161,7 +164,67 @@ export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
           </div>
         </header>
         <main className="page-container">{children}</main>
+        </div>
       </div>
+    </CurrencyPreferenceProvider>
+  );
+}
+
+function CurrencyPreferenceControls() {
+  const {
+    displayCurrency,
+    exchangeRate,
+    setDisplayCurrency,
+    setExchangeRate,
+  } = useCurrencyPreference();
+  const [rateInput, setRateInput] = useState(() => String(exchangeRate));
+
+  function handleCurrencyChange(value: string) {
+    setDisplayCurrency(value === "USD" ? "USD" : "CRC");
+  }
+
+  function handleRateChange(value: string) {
+    setRateInput(value);
+
+    const parsedRate = Number(value);
+    if (Number.isFinite(parsedRate) && parsedRate > 0) {
+      setExchangeRate(parsedRate);
+    }
+  }
+
+  function handleRateBlur() {
+    const parsedRate = Number(rateInput);
+
+    if (!Number.isFinite(parsedRate) || parsedRate <= 0) {
+      setRateInput(String(exchangeRate));
+    }
+  }
+
+  return (
+    <div className="currency-controls" aria-label="Preferencia de moneda">
+      <label>
+        <span>Moneda</span>
+        <select
+          value={displayCurrency}
+          onChange={(event) => handleCurrencyChange(event.target.value as DisplayCurrency)}
+        >
+          <option value="CRC">CRC</option>
+          <option value="USD">USD</option>
+        </select>
+      </label>
+      {displayCurrency === "USD" ? (
+        <label>
+          <span>CRC/USD</span>
+          <input
+            min="1"
+            step="0.01"
+            type="number"
+            value={rateInput}
+            onBlur={handleRateBlur}
+            onChange={(event) => handleRateChange(event.target.value)}
+          />
+        </label>
+      ) : null}
     </div>
   );
 }

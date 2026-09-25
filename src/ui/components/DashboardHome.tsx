@@ -6,12 +6,7 @@ import { RetirementCalculationService } from "@/application/use-cases/Retirement
 import type { SavedRetirementCalculation } from "@/domain/retirementCalculation";
 import { createPatrimonyRecordRepository } from "@/data/createPatrimonyRecordRepository";
 import { createRetirementCalculationRepository } from "@/data/createRetirementCalculationRepository";
-
-const currencyFormatter = new Intl.NumberFormat("es-CR", {
-  style: "currency",
-  currency: "CRC",
-  maximumFractionDigits: 0,
-});
+import { useCurrencyPreference } from "@/ui/currency";
 
 const percentFormatter = new Intl.NumberFormat("es-CR", {
   maximumFractionDigits: 1,
@@ -32,6 +27,11 @@ export function DashboardHome() {
   const [records, setRecords] = useState<PatrimonyRecordView[]>([]);
   const [retirementGoal, setRetirementGoal] = useState<SavedRetirementCalculation | null>(null);
   const [message, setMessage] = useState("Dashboard del mes actual cargado por defecto.");
+  const {
+    displayCrcAmount,
+    displayRecordAmount,
+    formatCurrency,
+  } = useCurrencyPreference();
 
   useEffect(() => {
     Promise.all([
@@ -48,9 +48,9 @@ export function DashboardHome() {
   }, [patrimonyService, retirementService]);
 
   const monthlyRecords = records.filter((record) => record.recordDate.startsWith(selectedMonth));
-  const distribution = buildDistribution(monthlyRecords);
+  const distribution = buildDistribution(monthlyRecords, displayRecordAmount);
   const monthlyTotal = distribution.reduce((total, item) => total + item.amount, 0);
-  const retirementTarget = retirementGoal?.finalAmount ?? 0;
+  const retirementTarget = displayCrcAmount(retirementGoal?.finalAmount ?? 0);
   const retirementProgress = retirementTarget > 0
     ? Math.min(100, (monthlyTotal / retirementTarget) * 100)
     : 0;
@@ -79,15 +79,15 @@ export function DashboardHome() {
       <section className="metrics-grid">
         <article className="metric-card highlight-card">
           <span>Patrimonio del mes</span>
-          <strong>{currencyFormatter.format(monthlyTotal)}</strong>
+          <strong>{formatCurrency(monthlyTotal)}</strong>
         </article>
         <article className="metric-card">
           <span>Meta jubilación</span>
-          <strong>{retirementTarget > 0 ? currencyFormatter.format(retirementTarget) : "Sin meta"}</strong>
+          <strong>{retirementTarget > 0 ? formatCurrency(retirementTarget) : "Sin meta"}</strong>
         </article>
         <article className="metric-card">
           <span>Faltante estimado</span>
-          <strong>{retirementTarget > 0 ? currencyFormatter.format(retirementGap) : "—"}</strong>
+          <strong>{retirementTarget > 0 ? formatCurrency(retirementGap) : "—"}</strong>
         </article>
       </section>
 
@@ -111,7 +111,7 @@ export function DashboardHome() {
                 role="img"
                 style={{ background: buildDonutGradient(distribution) }}
               >
-                <span>{currencyFormatter.format(monthlyTotal)}</span>
+                <span>{formatCurrency(monthlyTotal)}</span>
               </div>
 
               <div className="chart-legend">
@@ -121,7 +121,7 @@ export function DashboardHome() {
                     <div>
                       <strong>{item.categoryName}</strong>
                       <small>
-                        {currencyFormatter.format(item.amount)} · {percentFormatter.format(item.percentage)}%
+                        {formatCurrency(item.amount)} · {percentFormatter.format(item.percentage)}%
                       </small>
                     </div>
                   </div>
@@ -141,15 +141,15 @@ export function DashboardHome() {
             <div className="progress-panel">
               <div className="progress-summary">
                 <span>Llevás</span>
-                <strong>{currencyFormatter.format(monthlyTotal)}</strong>
-                <small>de {currencyFormatter.format(retirementTarget)}</small>
+                <strong>{formatCurrency(monthlyTotal)}</strong>
+                <small>de {formatCurrency(retirementTarget)}</small>
               </div>
               <div className="progress-track">
                 <span style={{ width: `${retirementProgress}%` }} />
               </div>
               <div className="progress-footer">
                 <strong>{percentFormatter.format(retirementProgress)}%</strong>
-                <span>Faltan {currencyFormatter.format(retirementGap)}</span>
+                <span>Faltan {formatCurrency(retirementGap)}</span>
               </div>
               <p className="message">
                 Meta tomada del último cálculo guardado el {formatDate(retirementGoal.createdAt)}.
@@ -176,7 +176,10 @@ type DistributionItem = {
   color: string;
 };
 
-function buildDistribution(records: PatrimonyRecordView[]): DistributionItem[] {
+function buildDistribution(
+  records: PatrimonyRecordView[],
+  displayRecordAmount: (record: PatrimonyRecordView) => number,
+): DistributionItem[] {
   const totals = new Map<string, { categoryName: string; amount: number }>();
 
   for (const record of records) {
@@ -186,7 +189,7 @@ function buildDistribution(records: PatrimonyRecordView[]): DistributionItem[] {
     };
     totals.set(record.category.id, {
       categoryName: current.categoryName,
-      amount: current.amount + record.amountCrc,
+      amount: current.amount + displayRecordAmount(record),
     });
   }
 

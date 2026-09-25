@@ -8,13 +8,8 @@ import {
   type PatrimonyRecordView,
 } from "@/application/use-cases/PatrimonyRecordService";
 import { createPatrimonyRecordRepository, getConfiguredDataSource } from "@/data/createPatrimonyRecordRepository";
+import { useCurrencyPreference } from "@/ui/currency";
 import { PatrimonyBulkImport } from "./PatrimonyBulkImport";
-
-const currencyFormatter = new Intl.NumberFormat("es-CR", {
-  style: "currency",
-  currency: "CRC",
-  maximumFractionDigits: 0,
-});
 
 type RecordsTab = "entry" | "history";
 
@@ -33,6 +28,7 @@ export function PatrimonyRecords() {
   const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
   const [categories, setCategories] = useState<PatrimonyCategory[]>([]);
   const [records, setRecords] = useState<PatrimonyRecordView[]>([]);
+  const { displayRecordAmount, formatCurrency, formatRecordAmount, formatUsd } = useCurrencyPreference();
   const [message, setMessage] = useState(
     dataSource === "supabase"
       ? "Supabase mode enabled. Records are stored in the configured project."
@@ -154,7 +150,7 @@ export function PatrimonyRecords() {
       <section className="metrics-grid">
         <article className="metric-card">
           <span>Total registrado</span>
-          <strong>{currencyFormatter.format(totalAmount(records))}</strong>
+          <strong>{formatRecordTotal(records, displayRecordAmount, formatCurrency)}</strong>
         </article>
         <article className="metric-card">
           <span>Registros</span>
@@ -293,8 +289,8 @@ export function PatrimonyRecords() {
                     </p>
                   </div>
                   <div className="record-actions">
-                    <strong>{currencyFormatter.format(record.amountCrc)}</strong>
-                    {record.amountUsd !== null ? <span>USD {record.amountUsd.toLocaleString("en-US")}</span> : null}
+                    <strong>{formatRecordAmount(record)}</strong>
+                    {record.amountUsd !== null ? <span>Monto USD fuente {formatUsd(record.amountUsd)}</span> : null}
                     <button type="button" onClick={() => startEditingRecord(record)}>
                       Editar
                     </button>
@@ -334,8 +330,14 @@ function sortRecords(records: PatrimonyRecordView[]) {
   );
 }
 
-function totalAmount(records: PatrimonyRecordView[]) {
-  return records.reduce((total, record) => total + record.amountCrc, 0);
+function formatRecordTotal(
+  records: PatrimonyRecordView[],
+  displayRecordAmount: (record: PatrimonyRecordView) => number,
+  formatCurrency: (amount: number) => string,
+) {
+  const total = records.reduce((sum, record) => sum + displayRecordAmount(record), 0);
+
+  return formatCurrency(total);
 }
 
 function parseOptionalNumber(value: string) {
