@@ -20,7 +20,7 @@ Allow users to duplicate a patrimony record from the history list.
 
 ## Evidence
 - Branch: `feature/duplicate-patrimony-record`
-- Commits: pending.
+- Commits: `87186d3 feat: add patrimony record duplication`.
 - Checks:
   - Independent verifier ran `npm run typecheck`: passed.
   - Independent verifier ran `npm run lint`: passed.
