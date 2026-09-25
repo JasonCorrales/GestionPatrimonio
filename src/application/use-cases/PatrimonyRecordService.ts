@@ -132,6 +132,13 @@ export function validatePatrimonyRecord(
     });
   }
 
+  if (!["contribution", "interest"].includes(input.movementType)) {
+    errors.push({
+      field: "movementType",
+      message: "Movement type is required.",
+    });
+  }
+
   return errors;
 }
 

@@ -1,6 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
+import type { PatrimonyMovementType } from "@/domain/monthlyPatrimonyRecord";
 import type { PatrimonyCategory } from "@/domain/patrimonyCategory";
 import {
   PatrimonyRecordService,
@@ -12,6 +13,7 @@ import { useCurrencyPreference } from "@/ui/currency";
 import { PatrimonyBulkImport } from "./PatrimonyBulkImport";
 
 type RecordsTab = "entry" | "history";
+type MovementTypeFormValue = PatrimonyMovementType | "";
 
 export function PatrimonyRecords() {
   const service = useMemo(
@@ -24,6 +26,7 @@ export function PatrimonyRecords() {
   const [categoryId, setCategoryId] = useState("");
   const [amountCrc, setAmountCrc] = useState(0);
   const [amountUsd, setAmountUsd] = useState("");
+  const [movementType, setMovementType] = useState<MovementTypeFormValue>("");
   const [notes, setNotes] = useState("");
   const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
   const [categories, setCategories] = useState<PatrimonyCategory[]>([]);
@@ -80,6 +83,7 @@ export function PatrimonyRecords() {
           categoryId,
           amountCrc,
           amountUsd: parseOptionalNumber(amountUsd),
+          movementType: parseMovementType(movementType),
           notes,
         });
         setRecords((current) => sortRecords(current.map((record) =>
@@ -97,6 +101,7 @@ export function PatrimonyRecords() {
         categoryId,
         amountCrc,
         amountUsd: parseOptionalNumber(amountUsd),
+        movementType: parseMovementType(movementType),
         notes,
       });
       setRecords((current) => sortRecords([created, ...current]));
@@ -123,6 +128,7 @@ export function PatrimonyRecords() {
     setCategoryId(record.category.id);
     setAmountCrc(record.amountCrc);
     setAmountUsd(record.amountUsd?.toString() ?? "");
+    setMovementType(record.movementType ?? "");
     setNotes(record.notes ?? "");
     setActiveTab("entry");
     setMessage("Editando el registro seleccionado.");
@@ -134,6 +140,7 @@ export function PatrimonyRecords() {
     setCategoryId(record.category.id);
     setAmountCrc(record.amountCrc);
     setAmountUsd(record.amountUsd?.toString() ?? "");
+    setMovementType(record.movementType ?? "");
     setNotes(record.notes ?? "");
     setActiveTab("entry");
     setMessage("Registro duplicado en el formulario. Revisá los datos y guardalo como nuevo registro.");
@@ -171,6 +178,7 @@ export function PatrimonyRecords() {
     );
     setAmountCrc(0);
     setAmountUsd("");
+    setMovementType("");
     setNotes("");
   }
 
@@ -180,7 +188,7 @@ export function PatrimonyRecords() {
         <p className="eyebrow">Registros</p>
         <h1>Registro mensual de patrimonio</h1>
         <p>
-          Capturá una fecha, categoría, monto y nota. También podés importar registros desde una plantilla de Excel.
+          Capturá una fecha, categoría, tipo de movimiento, monto y nota. También podés importar registros desde una plantilla de Excel.
         </p>
       </section>
 
@@ -248,6 +256,19 @@ export function PatrimonyRecords() {
                     {category.name}
                   </option>
                 ))}
+              </select>
+            </label>
+
+            <label>
+              Tipo de movimiento
+              <select
+                required
+                value={movementType}
+                onChange={(event) => setMovementType(event.target.value as MovementTypeFormValue)}
+              >
+                <option value="">Seleccioná un tipo</option>
+                <option value="contribution">Aporte</option>
+                <option value="interest">Interés</option>
               </select>
             </label>
 
@@ -381,7 +402,7 @@ export function PatrimonyRecords() {
                         <div>
                           <strong>{formatDate(record.recordDate)}</strong>
                           <p>
-                            {record.category.name} · {record.notes ?? "Sin nota"}
+                            {record.category.name} · {formatMovementType(record.movementType)} · {record.notes ?? "Sin nota"}
                           </p>
                         </div>
                         <div className="record-actions">
@@ -466,6 +487,28 @@ function formatRecordTotal(
 
 function parseOptionalNumber(value: string) {
   return value.trim() === "" ? null : Number(value);
+}
+
+function parseMovementType(value: MovementTypeFormValue): PatrimonyMovementType {
+  if (value === "") {
+    throw new PatrimonyRecordValidationException([
+      { field: "movementType", message: "Tipo de movimiento es requerido." },
+    ]);
+  }
+
+  return value;
+}
+
+function formatMovementType(value: PatrimonyMovementType | null) {
+  if (value === "contribution") {
+    return "Aporte";
+  }
+
+  if (value === "interest") {
+    return "Interés";
+  }
+
+  return "Tipo pendiente";
 }
 
 function getErrorMessage(error: unknown) {

@@ -3,6 +3,7 @@
 import { ChangeEvent, useState } from "react";
 import { readSheet } from "read-excel-file/browser";
 import type { PatrimonyRecordInput } from "@/application/ports/PatrimonyRecordRepository";
+import type { PatrimonyMovementType } from "@/domain/monthlyPatrimonyRecord";
 import {
   PatrimonyRecordService,
   type PatrimonyRecordView,
@@ -23,6 +24,7 @@ type HeaderMap = {
   category?: number;
   amountCrc?: number;
   amountUsd?: number;
+  movementType?: number;
   notes?: number;
 };
 
@@ -33,7 +35,7 @@ export function PatrimonyBulkImport({
 }: PatrimonyBulkImportProps) {
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState(
-    "Formato esperado: Fecha, Categoria, Monto CRC, Monto USD, Nota. Monto USD y nota son opcionales.",
+    "Formato esperado: Fecha, Categoria, Tipo de movimiento, Monto CRC, Monto USD, Nota. Monto USD y nota son opcionales.",
   );
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -66,7 +68,7 @@ export function PatrimonyBulkImport({
         <p className="eyebrow">Carga masiva</p>
         <h2>Importar desde Excel</h2>
         <p className="muted">
-          Usá una hoja con encabezados <strong>Fecha</strong>, <strong>Categoria</strong>, <strong>Monto CRC</strong>, <strong>Monto USD</strong> y <strong>Nota</strong>. La categoría debe existir en el catálogo.
+          Usá una hoja con encabezados <strong>Fecha</strong>, <strong>Categoria</strong>, <strong>Tipo de movimiento</strong>, <strong>Monto CRC</strong>, <strong>Monto USD</strong> y <strong>Nota</strong>. La categoría debe existir en el catálogo.
         </p>
       </div>
 
@@ -78,6 +80,10 @@ export function PatrimonyBulkImport({
         <div>
           <strong>Categoria</strong>
           <span>Texto exacto de una categoría existente. Ejemplo: Inversion Bolsa.</span>
+        </div>
+        <div>
+          <strong>Tipo de movimiento</strong>
+          <span>Requerido. Usá Aporte o Interés.</span>
         </div>
         <div>
           <strong>Monto CRC</strong>
@@ -119,8 +125,13 @@ function parseRows(rows: ExcelRow[], categories: PatrimonyCategory[]): Patrimony
   const [headerRow, ...dataRows] = rows;
   const headerMap = mapHeaders(headerRow);
 
-  if (headerMap.date === undefined || headerMap.category === undefined || headerMap.amountCrc === undefined) {
-    throw new Error("Faltan columnas requeridas: Fecha, Categoria y Monto CRC.");
+  if (
+    headerMap.date === undefined ||
+    headerMap.category === undefined ||
+    headerMap.movementType === undefined ||
+    headerMap.amountCrc === undefined
+  ) {
+    throw new Error("Faltan columnas requeridas: Fecha, Categoria, Tipo de movimiento y Monto CRC.");
   }
 
   const categoriesByName = new Map(
@@ -145,6 +156,7 @@ function parseRows(rows: ExcelRow[], categories: PatrimonyCategory[]): Patrimony
     const amountUsd = headerMap.amountUsd === undefined
       ? null
       : parseOptionalAmount(row[headerMap.amountUsd]);
+    const movementType = parseMovementType(row[headerMap.movementType!], rowNumber);
 
     if (!Number.isFinite(amountCrc) || amountCrc < 0) {
       throw new Error(`Fila ${rowNumber}: monto CRC inválido.`);
@@ -159,6 +171,7 @@ function parseRows(rows: ExcelRow[], categories: PatrimonyCategory[]): Patrimony
       categoryId: category.id,
       amountCrc,
       amountUsd,
+      movementType,
       notes: headerMap.notes === undefined ? undefined : String(row[headerMap.notes] ?? "") || undefined,
     });
   });
@@ -184,6 +197,10 @@ function mapHeaders(headerRow: ExcelRow): HeaderMap {
       headerMap.category = index;
     }
 
+    if (["tipo", "tipo movimiento", "tipo de movimiento", "movimiento", "movement type", "movement_type"].includes(header)) {
+      headerMap.movementType = index;
+    }
+
     if (["monto crc", "monto_crc", "amount crc", "amount_crc", "monto", "amount", "valor", "balance"].includes(header)) {
       headerMap.amountCrc = index;
     }
@@ -198,6 +215,20 @@ function mapHeaders(headerRow: ExcelRow): HeaderMap {
   });
 
   return headerMap;
+}
+
+function parseMovementType(value: ExcelCell, rowNumber: number): PatrimonyMovementType {
+  const normalized = normalizeText(String(value ?? ""));
+
+  if (["aporte", "contribution"].includes(normalized)) {
+    return "contribution";
+  }
+
+  if (["interes", "interest"].includes(normalized)) {
+    return "interest";
+  }
+
+  throw new Error(`Fila ${rowNumber}: tipo de movimiento inválido. Usá Aporte o Interés.`);
 }
 
 function parseDate(value: ExcelCell, rowNumber: number) {

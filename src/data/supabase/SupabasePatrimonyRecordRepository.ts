@@ -10,7 +10,7 @@ import type { PatrimonyCategory } from "@/domain/patrimonyCategory";
 const RECORDS_TABLE_NAME = "monthly_patrimony_records";
 const CATEGORY_TABLE_NAME = "category";
 const CATEGORY_SELECT = "id, code, name, display_order, interest_rate";
-const RECORD_SELECT = `id, month, record_date, category_id, amount_crc, amount_usd, notes, created_at, updated_at, category(${CATEGORY_SELECT})`;
+const RECORD_SELECT = `id, month, record_date, category_id, amount_crc, amount_usd, movement_type, notes, created_at, updated_at, category(${CATEGORY_SELECT})`;
 
 type CategoryRow = {
   id: string;
@@ -27,6 +27,7 @@ type PatrimonyRecordRow = {
   category_id: string;
   amount_crc: number;
   amount_usd: number | null;
+  movement_type: "contribution" | "interest" | null;
   notes: string | null;
   created_at: string;
   updated_at: string;
@@ -191,6 +192,7 @@ function fromRecordRow(row: PatrimonyRecordRow): MonthlyPatrimonyRecord {
     category: fromCategoryRow(category),
     amountCrc: Number(row.amount_crc),
     amountUsd: row.amount_usd === null ? null : Number(row.amount_usd),
+    movementType: row.movement_type,
     notes: row.notes ?? undefined,
     createdAt: row.created_at,
     updatedAt: row.updated_at,
@@ -214,6 +216,7 @@ function toInsertRow(input: PatrimonyRecordInput, now: string) {
     category_id: input.categoryId,
     amount_crc: input.amountCrc,
     amount_usd: input.amountUsd ?? null,
+    movement_type: input.movementType,
     notes: input.notes ?? null,
     created_at: now,
     updated_at: now,
@@ -227,6 +230,7 @@ function toUpdateRow(input: PatrimonyRecordInput) {
     category_id: input.categoryId,
     amount_crc: input.amountCrc,
     amount_usd: input.amountUsd ?? null,
+    movement_type: input.movementType,
     notes: input.notes ?? null,
     updated_at: new Date().toISOString(),
   };

@@ -18,6 +18,7 @@ const seedRecords: MonthlyPatrimonyRecord[] = [
     category: stockInvestmentCategory,
     amountCrc: 12500,
     amountUsd: null,
+    movementType: "contribution",
     notes: "Demo record. Replace with Supabase persistence when configured.",
     createdAt: new Date("2025-01-31T12:00:00.000Z").toISOString(),
     updatedAt: new Date("2025-01-31T12:00:00.000Z").toISOString(),
@@ -103,6 +104,7 @@ export class InMemoryPatrimonyRecordRepository
       category,
       amountCrc: input.amountCrc,
       amountUsd: input.amountUsd ?? null,
+      movementType: input.movementType,
       notes: input.notes,
       createdAt: now,
       updatedAt: now,
@@ -128,6 +130,7 @@ export class InMemoryPatrimonyRecordRepository
       category: this.findCategory(input.categoryId),
       amountCrc: input.amountCrc,
       amountUsd: input.amountUsd ?? null,
+      movementType: input.movementType,
       notes: input.notes,
       updatedAt: new Date().toISOString(),
     };

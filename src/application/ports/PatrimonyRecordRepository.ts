@@ -1,4 +1,4 @@
-import type { MonthlyPatrimonyRecord } from "@/domain/monthlyPatrimonyRecord";
+import type { MonthlyPatrimonyRecord, PatrimonyMovementType } from "@/domain/monthlyPatrimonyRecord";
 import type { PatrimonyCategory } from "@/domain/patrimonyCategory";
 
 export type PatrimonyRecordInput = {
@@ -6,6 +6,7 @@ export type PatrimonyRecordInput = {
   categoryId: string;
   amountCrc: number;
   amountUsd?: number | null;
+  movementType: PatrimonyMovementType;
   notes?: string;
 };
 
