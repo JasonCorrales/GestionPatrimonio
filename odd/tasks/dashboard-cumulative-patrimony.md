@@ -20,7 +20,7 @@ Change the dashboard patrimony metric from month-only totals to cumulative patri
 
 ## Evidence
 - Branch: `feature/dashboard-cumulative-patrimony`
-- Commits: pending.
+- Commits: `d4b254b feat: make dashboard patrimony cumulative`.
 - Checks:
   - Independent verifier ran `npm run typecheck`: passed.
   - Independent verifier ran `npm run lint`: passed.
