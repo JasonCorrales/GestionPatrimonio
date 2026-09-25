@@ -15,7 +15,7 @@ Small web MVP for monthly patrimony tracking.
 - Maintain categories from the UI: list, create, edit, delete, and optional expected annual interest rate.
 - Protect the dashboard with Supabase email/password login and logout.
 - Calculate retirement compound-interest scenarios live and persist selected saved calculations.
-- View a main dashboard with monthly patrimony distribution and progress toward the latest retirement goal; the dashboard date filter uses the selected day's month for calculations.
+- View a main dashboard with cumulative patrimony distribution and progress toward the latest retirement goal; the dashboard date filter uses the selected day's month as the cumulative cutoff.
 - Switch between light and dark visual themes from the topbar.
 - Switch the global display currency between CRC and USD from the topbar with a locally persisted manual CRC-to-USD exchange rate; no exchange-rate API is used.
 - Track the categories the user currently manages:
