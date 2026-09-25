@@ -28,6 +28,10 @@ export function PatrimonyRecords() {
   const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
   const [categories, setCategories] = useState<PatrimonyCategory[]>([]);
   const [records, setRecords] = useState<PatrimonyRecordView[]>([]);
+  const [historyDateFilter, setHistoryDateFilter] = useState("");
+  const [historyCategoryFilter, setHistoryCategoryFilter] = useState("all");
+  const [historyPageSize, setHistoryPageSize] = useState(10);
+  const [historyPage, setHistoryPage] = useState(1);
   const { displayRecordAmount, formatCurrency, formatRecordAmount, formatUsd } = useCurrencyPreference();
   const [message, setMessage] = useState(
     dataSource === "supabase"
@@ -47,6 +51,25 @@ export function PatrimonyRecords() {
       });
   }, [service]);
 
+  const filteredHistoryRecords = useMemo(
+    () => records.filter((record) => {
+      const matchesDate = historyDateFilter === "" || record.recordDate === historyDateFilter;
+      const matchesCategory = historyCategoryFilter === "all" || record.category.id === historyCategoryFilter;
+
+      return matchesDate && matchesCategory;
+    }),
+    [historyCategoryFilter, historyDateFilter, records],
+  );
+  const historyTotalPages = Math.max(1, Math.ceil(filteredHistoryRecords.length / historyPageSize));
+  const currentHistoryPage = Math.min(historyPage, historyTotalPages);
+  const historyPageStartIndex = (currentHistoryPage - 1) * historyPageSize;
+  const paginatedHistoryRecords = filteredHistoryRecords.slice(
+    historyPageStartIndex,
+    historyPageStartIndex + historyPageSize,
+  );
+  const historyRangeStart = filteredHistoryRecords.length === 0 ? 0 : historyPageStartIndex + 1;
+  const historyRangeEnd = Math.min(historyPageStartIndex + historyPageSize, filteredHistoryRecords.length);
+
   async function handleRecordSubmit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
 
@@ -62,6 +85,7 @@ export function PatrimonyRecords() {
         setRecords((current) => sortRecords(current.map((record) =>
           record.id === updated.id ? updated : record,
         )));
+        setHistoryPage(1);
         resetRecordForm();
         setActiveTab("history");
         setMessage("Registro actualizado.");
@@ -76,6 +100,7 @@ export function PatrimonyRecords() {
         notes,
       });
       setRecords((current) => sortRecords([created, ...current]));
+      setHistoryPage(1);
       resetRecordForm({ keepCategory: true });
       setMessage(
         dataSource === "supabase"
@@ -126,6 +151,7 @@ export function PatrimonyRecords() {
     try {
       await service.deleteRecord(record.id);
       setRecords((current) => current.filter((item) => item.id !== record.id));
+      setHistoryPage(1);
 
       if (editingRecordId === record.id) {
         resetRecordForm();
@@ -271,6 +297,7 @@ export function PatrimonyRecords() {
               categories={categories}
               onImported={(importedRecords) => {
                 setRecords((current) => sortRecords([...importedRecords, ...current]));
+                setHistoryPage(1);
                 setMessage(`${importedRecords.length} registros importados desde Excel.`);
                 setActiveTab("history");
               }}
@@ -290,35 +317,118 @@ export function PatrimonyRecords() {
           {records.length === 0 ? (
             <p className="empty-state">Todavía no hay registros.</p>
           ) : (
-            <div className="records">
-              {records.map((record) => (
-                <article key={record.id} className="record">
-                  <div>
-                    <strong>{formatDate(record.recordDate)}</strong>
-                    <p>
-                      {record.category.name} · {record.notes ?? "Sin nota"}
-                    </p>
+            <>
+              <div className="history-controls form">
+                <label>
+                  Filtrar por fecha
+                  <input
+                    type="date"
+                    value={historyDateFilter}
+                    onChange={(event) => {
+                      setHistoryDateFilter(event.target.value);
+                      setHistoryPage(1);
+                    }}
+                  />
+                </label>
+                <label>
+                  Filtrar por categoría
+                  <select
+                    value={historyCategoryFilter}
+                    onChange={(event) => {
+                      setHistoryCategoryFilter(event.target.value);
+                      setHistoryPage(1);
+                    }}
+                  >
+                    <option value="all">Todas las categorías</option>
+                    {categories.map((category) => (
+                      <option key={category.id} value={category.id}>
+                        {category.name}
+                      </option>
+                    ))}
+                  </select>
+                </label>
+                <label>
+                  Registros por página
+                  <select
+                    value={historyPageSize}
+                    onChange={(event) => {
+                      setHistoryPageSize(Number(event.target.value));
+                      setHistoryPage(1);
+                    }}
+                  >
+                    <option value={10}>10</option>
+                    <option value={25}>25</option>
+                    <option value={50}>50</option>
+                  </select>
+                </label>
+              </div>
+
+              <div className="history-summary-row">
+                <span>
+                  Mostrando {historyRangeStart}-{historyRangeEnd} de {filteredHistoryRecords.length} filtrados
+                  {filteredHistoryRecords.length !== records.length ? ` (${records.length} totales)` : ""}
+                </span>
+                <span>Página {currentHistoryPage} de {historyTotalPages}</span>
+              </div>
+
+              {filteredHistoryRecords.length === 0 ? (
+                <p className="empty-state">No hay registros que coincidan con los filtros seleccionados.</p>
+              ) : (
+                <>
+                  <div className="records">
+                    {paginatedHistoryRecords.map((record) => (
+                      <article key={record.id} className="record">
+                        <div>
+                          <strong>{formatDate(record.recordDate)}</strong>
+                          <p>
+                            {record.category.name} · {record.notes ?? "Sin nota"}
+                          </p>
+                        </div>
+                        <div className="record-actions">
+                          <strong>{formatRecordAmount(record)}</strong>
+                          {record.amountUsd !== null ? <span>Monto USD fuente {formatUsd(record.amountUsd)}</span> : null}
+                          <button type="button" onClick={() => startEditingRecord(record)}>
+                            Editar
+                          </button>
+                          <button type="button" onClick={() => startDuplicatingRecord(record)}>
+                            Duplicar
+                          </button>
+                          <button
+                            className="danger-button"
+                            type="button"
+                            onClick={() => deleteRecord(record)}
+                          >
+                            Eliminar
+                          </button>
+                        </div>
+                      </article>
+                    ))}
                   </div>
-                  <div className="record-actions">
-                    <strong>{formatRecordAmount(record)}</strong>
-                    {record.amountUsd !== null ? <span>Monto USD fuente {formatUsd(record.amountUsd)}</span> : null}
-                    <button type="button" onClick={() => startEditingRecord(record)}>
-                      Editar
-                    </button>
-                    <button type="button" onClick={() => startDuplicatingRecord(record)}>
-                      Duplicar
-                    </button>
+
+                  <div className="pagination-controls">
                     <button
-                      className="danger-button"
+                      className="secondary-button"
+                      disabled={currentHistoryPage === 1}
                       type="button"
-                      onClick={() => deleteRecord(record)}
+                      onClick={() => setHistoryPage(Math.max(1, currentHistoryPage - 1))}
                     >
-                      Eliminar
+                      Anterior
+                    </button>
+                    <span>
+                      Página {currentHistoryPage} de {historyTotalPages}
+                    </span>
+                    <button
+                      className="secondary-button"
+                      disabled={currentHistoryPage === historyTotalPages}
+                      type="button"
+                      onClick={() => setHistoryPage(Math.min(historyTotalPages, currentHistoryPage + 1))}
+                    >
+                      Siguiente
                     </button>
                   </div>
-                </article>
-              ))}
-            </div>
+                </>
+              )}
+            </>
           )}
         </section>
       )}
