@@ -20,7 +20,7 @@ Allow the dashboard month filter to use a date picker: the user selects any day,
 
 ## Evidence
 - Branch: `feature/dashboard-date-month-filter`
-- Commits: pending.
+- Commits: `a0f8f90 feat: add dashboard date month filter`.
 - Checks:
   - Independent verifier ran `npm run typecheck`: passed.
   - Independent verifier ran `npm run lint`: passed.
