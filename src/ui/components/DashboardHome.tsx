@@ -49,6 +49,7 @@ export function DashboardHome() {
 
   const selectedMonth = selectedDate.slice(0, 7);
   const cumulativeRecords = records.filter((record) => record.recordDate.slice(0, 7) <= selectedMonth);
+  const cumulativeTrend = buildCumulativeTrend(records, displayRecordAmount);
   const distribution = buildDistribution(cumulativeRecords, displayRecordAmount);
   const cumulativeTotal = distribution.reduce((total, item) => total + item.amount, 0);
   const retirementTarget = displayCrcAmount(retirementGoal?.finalAmount ?? 0);
@@ -165,6 +166,43 @@ export function DashboardHome() {
         </article>
       </section>
 
+      <section className="card elevated-card dashboard-card line-chart-card">
+        <div className="section-title-row">
+          <div>
+            <p className="eyebrow">Evolución acumulada</p>
+            <h2>Patrimonio acumulado por mes</h2>
+          </div>
+          {cumulativeTrend.length > 0 ? (
+            <span className="pill">
+              {formatMonth(cumulativeTrend[0].month)} - {formatMonth(cumulativeTrend[cumulativeTrend.length - 1].month)}
+            </span>
+          ) : null}
+        </div>
+
+        {cumulativeTrend.length === 0 ? (
+          <p className="empty-state">No hay registros para graficar la evolución acumulada.</p>
+        ) : (
+          <div className="line-chart-layout">
+            <CumulativeLineChart
+              formatCurrency={formatCurrency}
+              points={cumulativeTrend}
+            />
+            <div className="line-chart-summary">
+              <div>
+                <span>Mes inicial</span>
+                <strong>{formatMonth(cumulativeTrend[0].month)}</strong>
+                <small>{formatCurrency(cumulativeTrend[0].cumulativeAmount)}</small>
+              </div>
+              <div>
+                <span>Mes más reciente</span>
+                <strong>{formatMonth(cumulativeTrend[cumulativeTrend.length - 1].month)}</strong>
+                <small>{formatCurrency(cumulativeTrend[cumulativeTrend.length - 1].cumulativeAmount)}</small>
+              </div>
+            </div>
+          </div>
+        )}
+      </section>
+
       <p className="message">{message}</p>
     </div>
   );
@@ -177,6 +215,75 @@ type DistributionItem = {
   percentage: number;
   color: string;
 };
+
+type CumulativeTrendPoint = {
+  month: string;
+  monthlyAmount: number;
+  cumulativeAmount: number;
+};
+
+type CumulativeLineChartProps = {
+  points: CumulativeTrendPoint[];
+  formatCurrency: (amount: number) => string;
+};
+
+function CumulativeLineChart({ points, formatCurrency }: CumulativeLineChartProps) {
+  const width = 720;
+  const height = 280;
+  const padding = 38;
+  const chartWidth = width - padding * 2;
+  const chartHeight = height - padding * 2;
+  const maxAmount = Math.max(...points.map((point) => point.cumulativeAmount));
+  const safeMaxAmount = maxAmount > 0 ? maxAmount : 1;
+  const coordinates = points.map((point, index) => {
+    const x = points.length === 1
+      ? padding + chartWidth / 2
+      : padding + (index / (points.length - 1)) * chartWidth;
+    const y = padding + chartHeight - (point.cumulativeAmount / safeMaxAmount) * chartHeight;
+
+    return { ...point, x, y };
+  });
+  const linePoints = coordinates.map((point) => `${point.x},${point.y}`).join(" ");
+  const areaPoints = [
+    `${coordinates[0].x},${height - padding}`,
+    linePoints,
+    `${coordinates[coordinates.length - 1].x},${height - padding}`,
+  ].join(" ");
+  const firstPoint = points[0];
+  const lastPoint = points[points.length - 1];
+
+  return (
+    <div className="line-chart-shell">
+      <svg
+        aria-label={`Patrimonio acumulado desde ${formatMonth(firstPoint.month)} hasta ${formatMonth(lastPoint.month)}`}
+        className="line-chart"
+        role="img"
+        viewBox={`0 0 ${width} ${height}`}
+      >
+        <line className="line-chart-axis" x1={padding} x2={padding} y1={padding} y2={height - padding} />
+        <line className="line-chart-axis" x1={padding} x2={width - padding} y1={height - padding} y2={height - padding} />
+        <polygon className="line-chart-area" points={areaPoints} />
+        <polyline className="line-chart-line" points={linePoints} />
+        {coordinates.map((point) => (
+          <circle key={point.month} className="line-chart-point" cx={point.x} cy={point.y} r="4">
+            <title>
+              {formatMonth(point.month)}: {formatCurrency(point.cumulativeAmount)} acumulado
+            </title>
+          </circle>
+        ))}
+        <text className="line-chart-label" x={padding} y={height - 10}>
+          {formatMonth(firstPoint.month)}
+        </text>
+        <text className="line-chart-label" textAnchor="end" x={width - padding} y={height - 10}>
+          {formatMonth(lastPoint.month)}
+        </text>
+        <text className="line-chart-label" x={padding} y={padding - 14}>
+          {formatCurrency(maxAmount)}
+        </text>
+      </svg>
+    </div>
+  );
+}
 
 function buildDistribution(
   records: PatrimonyRecordView[],
@@ -206,6 +313,51 @@ function buildDistribution(
       color: chartColors[index % chartColors.length],
     }))
     .sort((left, right) => right.amount - left.amount);
+}
+
+function buildCumulativeTrend(
+  records: PatrimonyRecordView[],
+  displayRecordAmount: (record: PatrimonyRecordView) => number,
+): CumulativeTrendPoint[] {
+  if (records.length === 0) {
+    return [];
+  }
+
+  const monthlyTotals = new Map<string, number>();
+  const recordMonths = records.map((record) => record.recordDate.slice(0, 7)).sort();
+  const firstMonth = recordMonths[0];
+  const lastMonth = recordMonths[recordMonths.length - 1];
+
+  for (const record of records) {
+    const month = record.recordDate.slice(0, 7);
+    monthlyTotals.set(month, (monthlyTotals.get(month) ?? 0) + displayRecordAmount(record));
+  }
+
+  let cumulativeAmount = 0;
+
+  return enumerateMonths(firstMonth, lastMonth).map((month) => {
+    const monthlyAmount = monthlyTotals.get(month) ?? 0;
+    cumulativeAmount += monthlyAmount;
+
+    return {
+      month,
+      monthlyAmount,
+      cumulativeAmount,
+    };
+  });
+}
+
+function enumerateMonths(firstMonth: string, lastMonth: string) {
+  const months: string[] = [];
+  const cursor = new Date(`${firstMonth}-01T00:00:00`);
+  const last = new Date(`${lastMonth}-01T00:00:00`);
+
+  while (cursor <= last) {
+    months.push(cursor.toISOString().slice(0, 7));
+    cursor.setMonth(cursor.getMonth() + 1);
+  }
+
+  return months;
 }
 
 function buildDonutGradient(distribution: DistributionItem[]) {
