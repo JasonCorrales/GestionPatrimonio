@@ -23,7 +23,7 @@ export function DashboardHome() {
     () => new RetirementCalculationService(createRetirementCalculationRepository()),
     [],
   );
-  const [selectedMonth, setSelectedMonth] = useState(currentMonth());
+  const [selectedDate, setSelectedDate] = useState(currentDate());
   const [records, setRecords] = useState<PatrimonyRecordView[]>([]);
   const [retirementGoal, setRetirementGoal] = useState<SavedRetirementCalculation | null>(null);
   const [message, setMessage] = useState("Dashboard del mes actual cargado por defecto.");
@@ -47,6 +47,7 @@ export function DashboardHome() {
       });
   }, [patrimonyService, retirementService]);
 
+  const selectedMonth = selectedDate.slice(0, 7);
   const monthlyRecords = records.filter((record) => record.recordDate.startsWith(selectedMonth));
   const distribution = buildDistribution(monthlyRecords, displayRecordAmount);
   const monthlyTotal = distribution.reduce((total, item) => total + item.amount, 0);
@@ -67,12 +68,13 @@ export function DashboardHome() {
           </p>
         </div>
         <label className="month-filter">
-          Mes a consultar
+          Fecha a consultar
           <input
-            type="month"
-            value={selectedMonth}
-            onChange={(event) => setSelectedMonth(event.target.value)}
+            type="date"
+            value={selectedDate}
+            onChange={(event) => setSelectedDate(event.target.value || currentDate())}
           />
+          <span>El dashboard usa el mes de la fecha seleccionada.</span>
         </label>
       </section>
 
@@ -218,8 +220,8 @@ function buildDonutGradient(distribution: DistributionItem[]) {
   return `conic-gradient(${segments.join(", ")})`;
 }
 
-function currentMonth() {
-  return new Date().toISOString().slice(0, 7);
+function currentDate() {
+  return new Date().toISOString().slice(0, 10);
 }
 
 function formatMonth(value: string) {
