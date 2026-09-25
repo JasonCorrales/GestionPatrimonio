@@ -25,7 +25,7 @@ Add a global currency preference so the app can display general monetary data ac
 
 ## Evidence
 - Branch: `feature/global-currency-selector`
-- Commits: `be36cbc feat: add global currency selector`.
+- Commits: `241d917 feat: add global currency selector`.
 - Checks:
   - `npm run typecheck`: passed.
   - `npm run lint`: passed.
