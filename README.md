@@ -17,6 +17,7 @@ Small web MVP for monthly patrimony tracking.
 - Calculate retirement compound-interest scenarios live and persist selected saved calculations.
 - View a main dashboard with monthly patrimony distribution and progress toward the latest retirement goal.
 - Switch between light and dark visual themes from the topbar.
+- Switch the global display currency between CRC and USD from the topbar with a locally persisted manual CRC-to-USD exchange rate; no exchange-rate API is used.
 - Track the categories the user currently manages:
   - Inversion Bolsa
   - Certificados a Plazo

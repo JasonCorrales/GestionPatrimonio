@@ -4,12 +4,7 @@ import { FormEvent, useEffect, useMemo, useState } from "react";
 import { RetirementCalculationService } from "@/application/use-cases/RetirementCalculationService";
 import type { SavedRetirementCalculation } from "@/domain/retirementCalculation";
 import { createRetirementCalculationRepository } from "@/data/createRetirementCalculationRepository";
-
-const currencyFormatter = new Intl.NumberFormat("es-CR", {
-  style: "currency",
-  currency: "CRC",
-  maximumFractionDigits: 0,
-});
+import { useCurrencyPreference } from "@/ui/currency";
 
 const percentFormatter = new Intl.NumberFormat("es-CR", {
   maximumFractionDigits: 2,
@@ -26,6 +21,7 @@ export function RetirementCalculator() {
   const [durationYears, setDurationYears] = useState(25);
   const [savedCalculations, setSavedCalculations] = useState<SavedRetirementCalculation[]>([]);
   const [message, setMessage] = useState("Los cálculos son en caliente; solo se guardan cuando vos lo decidís.");
+  const { formatCrcAmount } = useCurrencyPreference();
 
   const currentInput = {
     initialBalance,
@@ -58,7 +54,7 @@ export function RetirementCalculator() {
 
   async function deleteCalculation(calculation: SavedRetirementCalculation) {
     const confirmed = window.confirm(
-      `¿Eliminar el cálculo guardado por ${currencyFormatter.format(calculation.finalAmount)}?`,
+      `¿Eliminar el cálculo guardado por ${formatCrcAmount(calculation.finalAmount)}?`,
     );
 
     if (!confirmed) {
@@ -89,15 +85,15 @@ export function RetirementCalculator() {
       <section className="metrics-grid">
         <article className="metric-card highlight-card">
           <span>Monto proyectado</span>
-          <strong>{currencyFormatter.format(projection.finalAmount)}</strong>
+          <strong>{formatCrcAmount(projection.finalAmount)}</strong>
         </article>
         <article className="metric-card">
           <span>Total aportado</span>
-          <strong>{currencyFormatter.format(projection.totalContributed)}</strong>
+          <strong>{formatCrcAmount(projection.totalContributed)}</strong>
         </article>
         <article className="metric-card">
           <span>Monto mensual estimado</span>
-          <strong>{currencyFormatter.format(projection.estimatedMonthlyAmount)}</strong>
+          <strong>{formatCrcAmount(projection.estimatedMonthlyAmount)}</strong>
         </article>
       </section>
 
@@ -109,7 +105,7 @@ export function RetirementCalculator() {
           </div>
 
           <label>
-            Balance inicial
+            Balance inicial (CRC)
             <input
               min="0"
               step="0.01"
@@ -120,7 +116,7 @@ export function RetirementCalculator() {
           </label>
 
           <label>
-            Monto periódico mensual
+            Monto periódico mensual (CRC)
             <input
               min="0"
               step="0.01"
@@ -165,11 +161,11 @@ export function RetirementCalculator() {
           <dl className="summary-list">
             <div>
               <dt>Balance inicial</dt>
-              <dd>{currencyFormatter.format(initialBalance)}</dd>
+              <dd>{formatCrcAmount(initialBalance)}</dd>
             </div>
             <div>
               <dt>Aporte mensual</dt>
-              <dd>{currencyFormatter.format(periodicAmount)}</dd>
+              <dd>{formatCrcAmount(periodicAmount)}</dd>
             </div>
             <div>
               <dt>Interés anual</dt>
@@ -181,13 +177,13 @@ export function RetirementCalculator() {
             </div>
             <div>
               <dt>Monto mensual estimado</dt>
-              <dd>{currencyFormatter.format(projection.estimatedMonthlyAmount)}</dd>
+              <dd>{formatCrcAmount(projection.estimatedMonthlyAmount)}</dd>
             </div>
           </dl>
 
           <div className="projection-result">
             <span>Meta proyectada</span>
-            <strong>{currencyFormatter.format(projection.finalAmount)}</strong>
+            <strong>{formatCrcAmount(projection.finalAmount)}</strong>
           </div>
         </section>
       </section>
@@ -208,14 +204,14 @@ export function RetirementCalculator() {
             {savedCalculations.map((calculation) => (
               <article key={calculation.id} className="record">
                 <div>
-                  <strong>{currencyFormatter.format(calculation.finalAmount)}</strong>
+                  <strong>{formatCrcAmount(calculation.finalAmount)}</strong>
                   <p>
-                    Inicial {currencyFormatter.format(calculation.initialBalance)} · Mensual {currencyFormatter.format(calculation.periodicAmount)} · {percentFormatter.format(calculation.annualInterestRate)}% · {calculation.durationYears} años
+                    Inicial {formatCrcAmount(calculation.initialBalance)} · Mensual {formatCrcAmount(calculation.periodicAmount)} · {percentFormatter.format(calculation.annualInterestRate)}% · {calculation.durationYears} años
                   </p>
                 </div>
                 <div className="record-actions">
                   <span className="pill">
-                    Mensual estimado: {currencyFormatter.format(calculation.estimatedMonthlyAmount)}
+                    Mensual estimado: {formatCrcAmount(calculation.estimatedMonthlyAmount)}
                   </span>
                   <button
                     className="danger-button"

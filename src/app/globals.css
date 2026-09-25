@@ -176,6 +176,7 @@ button {
 .topbar-actions {
   align-items: center;
   display: flex;
+  flex-wrap: wrap;
   gap: 12px;
 }
 
@@ -190,6 +191,38 @@ button {
   height: 42px;
   justify-content: center;
   width: 42px;
+}
+
+.currency-controls {
+  align-items: center;
+  display: flex;
+  gap: 8px;
+}
+
+.currency-controls label {
+  align-items: center;
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--muted);
+  display: flex;
+  font-size: 0.78rem;
+  font-weight: 800;
+  gap: 8px;
+  padding: 8px 12px;
+}
+
+.currency-controls select,
+.currency-controls input {
+  background: transparent;
+  border: 0;
+  color: var(--foreground);
+  font-weight: 900;
+  outline: none;
+}
+
+.currency-controls input {
+  width: 84px;
 }
 
 .session-chip {
@@ -786,6 +819,7 @@ button {
   }
 
   .category-item,
+  .currency-controls,
   .record,
   .section-title-row,
   .session-chip,
