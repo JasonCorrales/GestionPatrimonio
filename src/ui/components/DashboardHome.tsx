@@ -189,14 +189,29 @@ export function DashboardHome() {
             />
             <div className="line-chart-summary">
               <div>
-                <span>Mes inicial</span>
-                <strong>{formatMonth(cumulativeTrend[0].month)}</strong>
-                <small>{formatCurrency(cumulativeTrend[0].cumulativeAmount)}</small>
+                <span>Total acumulado</span>
+                <strong>{formatCurrency(cumulativeTrend[cumulativeTrend.length - 1].totalCumulativeAmount)}</strong>
+                <small>Incluye registros sin tipo de movimiento.</small>
               </div>
               <div>
-                <span>Mes más reciente</span>
-                <strong>{formatMonth(cumulativeTrend[cumulativeTrend.length - 1].month)}</strong>
-                <small>{formatCurrency(cumulativeTrend[cumulativeTrend.length - 1].cumulativeAmount)}</small>
+                <span>Aportes acumulados</span>
+                <strong>{formatCurrency(cumulativeTrend[cumulativeTrend.length - 1].contributionCumulativeAmount)}</strong>
+                <small>
+                  {formatSharePercentage(
+                    cumulativeTrend[cumulativeTrend.length - 1].contributionCumulativeAmount,
+                    cumulativeTrend[cumulativeTrend.length - 1].totalCumulativeAmount,
+                  )} del total acumulado.
+                </small>
+              </div>
+              <div>
+                <span>Intereses acumulados</span>
+                <strong>{formatCurrency(cumulativeTrend[cumulativeTrend.length - 1].interestCumulativeAmount)}</strong>
+                <small>
+                  {formatSharePercentage(
+                    cumulativeTrend[cumulativeTrend.length - 1].interestCumulativeAmount,
+                    cumulativeTrend[cumulativeTrend.length - 1].totalCumulativeAmount,
+                  )} del total acumulado.
+                </small>
               </div>
             </div>
           </div>
@@ -218,8 +233,12 @@ type DistributionItem = {
 
 type CumulativeTrendPoint = {
   month: string;
-  monthlyAmount: number;
-  cumulativeAmount: number;
+  totalMonthlyAmount: number;
+  contributionMonthlyAmount: number;
+  interestMonthlyAmount: number;
+  totalCumulativeAmount: number;
+  contributionCumulativeAmount: number;
+  interestCumulativeAmount: number;
 };
 
 type CumulativeLineChartProps = {
@@ -233,22 +252,45 @@ function CumulativeLineChart({ points, formatCurrency }: CumulativeLineChartProp
   const padding = 38;
   const chartWidth = width - padding * 2;
   const chartHeight = height - padding * 2;
-  const maxAmount = Math.max(...points.map((point) => point.cumulativeAmount));
+  const maxAmount = Math.max(
+    ...points.flatMap((point) => [
+      point.totalCumulativeAmount,
+      point.contributionCumulativeAmount,
+      point.interestCumulativeAmount,
+    ]),
+  );
   const safeMaxAmount = maxAmount > 0 ? maxAmount : 1;
   const coordinates = points.map((point, index) => {
     const x = points.length === 1
       ? padding + chartWidth / 2
       : padding + (index / (points.length - 1)) * chartWidth;
-    const y = padding + chartHeight - (point.cumulativeAmount / safeMaxAmount) * chartHeight;
 
-    return { ...point, x, y };
+    return {
+      ...point,
+      x,
+      totalY: yForAmount(point.totalCumulativeAmount, safeMaxAmount, padding, chartHeight),
+      contributionY: yForAmount(point.contributionCumulativeAmount, safeMaxAmount, padding, chartHeight),
+      classifiedY: yForAmount(
+        point.contributionCumulativeAmount + point.interestCumulativeAmount,
+        safeMaxAmount,
+        padding,
+        chartHeight,
+      ),
+    };
   });
-  const linePoints = coordinates.map((point) => `${point.x},${point.y}`).join(" ");
-  const areaPoints = [
-    `${coordinates[0].x},${height - padding}`,
-    linePoints,
-    `${coordinates[coordinates.length - 1].x},${height - padding}`,
-  ].join(" ");
+  const totalLinePoints = coordinates.map((point) => `${point.x},${point.totalY}`).join(" ");
+  const contributionAreaPoints = buildAreaToBaselinePoints(
+    coordinates.map((point) => ({ x: point.x, y: point.contributionY })),
+    height - padding,
+  );
+  const interestAreaPoints = buildBandAreaPoints(
+    coordinates.map((point) => ({ x: point.x, y: point.classifiedY })),
+    coordinates.map((point) => ({ x: point.x, y: point.contributionY })),
+  );
+  const totalAreaPoints = buildAreaToBaselinePoints(
+    coordinates.map((point) => ({ x: point.x, y: point.totalY })),
+    height - padding,
+  );
   const firstPoint = points[0];
   const lastPoint = points[points.length - 1];
 
@@ -262,12 +304,14 @@ function CumulativeLineChart({ points, formatCurrency }: CumulativeLineChartProp
       >
         <line className="line-chart-axis" x1={padding} x2={padding} y1={padding} y2={height - padding} />
         <line className="line-chart-axis" x1={padding} x2={width - padding} y1={height - padding} y2={height - padding} />
-        <polygon className="line-chart-area" points={areaPoints} />
-        <polyline className="line-chart-line" points={linePoints} />
+        <polygon className="line-chart-area total-area" points={totalAreaPoints} />
+        <polygon className="line-chart-area contribution-area" points={contributionAreaPoints} />
+        <polygon className="line-chart-area interest-area" points={interestAreaPoints} />
+        <polyline className="line-chart-line total-line" points={totalLinePoints} />
         {coordinates.map((point) => (
-          <circle key={point.month} className="line-chart-point" cx={point.x} cy={point.y} r="4">
+          <circle key={point.month} className="line-chart-point total-point" cx={point.x} cy={point.totalY} r="4">
             <title>
-              {formatMonth(point.month)}: {formatCurrency(point.cumulativeAmount)} acumulado
+              {formatMonth(point.month)}: {formatCurrency(point.totalCumulativeAmount)} total acumulado; {formatCurrency(point.contributionCumulativeAmount)} en aportes y {formatCurrency(point.interestCumulativeAmount)} en intereses.
             </title>
           </circle>
         ))}
@@ -281,8 +325,32 @@ function CumulativeLineChart({ points, formatCurrency }: CumulativeLineChartProp
           {formatCurrency(maxAmount)}
         </text>
       </svg>
+      <div className="line-chart-legend" aria-label="Leyenda de evolución acumulada">
+        <span><i className="total-line-swatch" /> Patrimonio acumulado</span>
+        <span><i className="contribution-line-swatch" /> Sombreado Aporte</span>
+        <span><i className="interest-line-swatch" /> Sombreado Interés</span>
+      </div>
     </div>
   );
+}
+
+function yForAmount(amount: number, maxAmount: number, padding: number, chartHeight: number) {
+  return padding + chartHeight - (amount / maxAmount) * chartHeight;
+}
+
+function buildAreaToBaselinePoints(points: { x: number; y: number }[], baselineY: number) {
+  return [
+    `${points[0].x},${baselineY}`,
+    ...points.map((point) => `${point.x},${point.y}`),
+    `${points[points.length - 1].x},${baselineY}`,
+  ].join(" ");
+}
+
+function buildBandAreaPoints(topPoints: { x: number; y: number }[], bottomPoints: { x: number; y: number }[]) {
+  return [
+    ...topPoints.map((point) => `${point.x},${point.y}`),
+    ...[...bottomPoints].reverse().map((point) => `${point.x},${point.y}`),
+  ].join(" ");
 }
 
 function buildDistribution(
@@ -323,26 +391,41 @@ function buildCumulativeTrend(
     return [];
   }
 
-  const monthlyTotals = new Map<string, number>();
+  const monthlyTotals = new Map<string, { total: number; contribution: number; interest: number }>();
   const recordMonths = records.map((record) => record.recordDate.slice(0, 7)).sort();
   const firstMonth = recordMonths[0];
   const lastMonth = recordMonths[recordMonths.length - 1];
 
   for (const record of records) {
     const month = record.recordDate.slice(0, 7);
-    monthlyTotals.set(month, (monthlyTotals.get(month) ?? 0) + displayRecordAmount(record));
+    const amount = displayRecordAmount(record);
+    const current = monthlyTotals.get(month) ?? { total: 0, contribution: 0, interest: 0 };
+
+    monthlyTotals.set(month, {
+      total: current.total + amount,
+      contribution: current.contribution + (record.movementType === "contribution" ? amount : 0),
+      interest: current.interest + (record.movementType === "interest" ? amount : 0),
+    });
   }
 
-  let cumulativeAmount = 0;
+  let totalCumulativeAmount = 0;
+  let contributionCumulativeAmount = 0;
+  let interestCumulativeAmount = 0;
 
   return enumerateMonths(firstMonth, lastMonth).map((month) => {
-    const monthlyAmount = monthlyTotals.get(month) ?? 0;
-    cumulativeAmount += monthlyAmount;
+    const monthlyAmount = monthlyTotals.get(month) ?? { total: 0, contribution: 0, interest: 0 };
+    totalCumulativeAmount += monthlyAmount.total;
+    contributionCumulativeAmount += monthlyAmount.contribution;
+    interestCumulativeAmount += monthlyAmount.interest;
 
     return {
       month,
-      monthlyAmount,
-      cumulativeAmount,
+      totalMonthlyAmount: monthlyAmount.total,
+      contributionMonthlyAmount: monthlyAmount.contribution,
+      interestMonthlyAmount: monthlyAmount.interest,
+      totalCumulativeAmount,
+      contributionCumulativeAmount,
+      interestCumulativeAmount,
     };
   });
 }
@@ -389,6 +472,14 @@ function formatDate(value: string) {
     month: "2-digit",
     year: "numeric",
   }).format(new Date(value));
+}
+
+function formatSharePercentage(amount: number, total: number) {
+  if (total <= 0) {
+    return "0%";
+  }
+
+  return `${percentFormatter.format((amount / total) * 100)}%`;
 }
 
 function getErrorMessage(error: unknown) {
