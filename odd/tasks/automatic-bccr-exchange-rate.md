@@ -27,4 +27,4 @@ Use the daily BCCR CRC/USD exchange rate for presentation-layer currency convers
 - `npm run lint` passed after the REST/Bearer token migration.
 - `npm run build` passed after the REST/Bearer token migration.
 - `git grep -n -E 'bccr-indicadores-economicos|BCCR_EMAIL' -- .` returned no tracked matches.
-- Work-unit commit: `7426fad feat: fetch BCCR exchange rate automatically`.
+- Work-unit commit: `4969ad5 feat: fetch BCCR exchange rate automatically`.
