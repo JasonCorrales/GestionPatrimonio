@@ -225,6 +225,22 @@ button {
   width: 84px;
 }
 
+.exchange-rate-refresh {
+  background: var(--primary-soft);
+  border: 1px solid color-mix(in srgb, var(--primary) 34%, transparent);
+  border-radius: 999px;
+  color: var(--primary-dark);
+  font-size: 0.78rem;
+  font-weight: 900;
+  min-height: 38px;
+  padding: 8px 12px;
+}
+
+.exchange-rate-refresh:disabled {
+  cursor: wait;
+  opacity: 0.72;
+}
+
 .session-chip {
   align-items: center;
   background: var(--surface-strong);
