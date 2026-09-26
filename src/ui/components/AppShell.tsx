@@ -174,30 +174,14 @@ function CurrencyPreferenceControls() {
   const {
     displayCurrency,
     exchangeRate,
+    exchangeRateMetadata,
+    exchangeRateStatus,
+    refreshExchangeRate,
     setDisplayCurrency,
     setExchangeRate,
   } = useCurrencyPreference();
-  const [rateInput, setRateInput] = useState(() => String(exchangeRate));
-
   function handleCurrencyChange(value: string) {
     setDisplayCurrency(value === "USD" ? "USD" : "CRC");
-  }
-
-  function handleRateChange(value: string) {
-    setRateInput(value);
-
-    const parsedRate = Number(value);
-    if (Number.isFinite(parsedRate) && parsedRate > 0) {
-      setExchangeRate(parsedRate);
-    }
-  }
-
-  function handleRateBlur() {
-    const parsedRate = Number(rateInput);
-
-    if (!Number.isFinite(parsedRate) || parsedRate <= 0) {
-      setRateInput(String(exchangeRate));
-    }
   }
 
   return (
@@ -213,20 +197,78 @@ function CurrencyPreferenceControls() {
         </select>
       </label>
       {displayCurrency === "USD" ? (
-        <label>
-          <span>CRC/USD</span>
-          <input
-            min="1"
-            step="0.01"
-            type="number"
-            value={rateInput}
-            onBlur={handleRateBlur}
-            onChange={(event) => handleRateChange(event.target.value)}
+        <>
+          <ExchangeRateInput
+            exchangeRate={exchangeRate}
+            key={exchangeRate}
+            onRateChange={setExchangeRate}
           />
-        </label>
+          <button
+            className="exchange-rate-refresh"
+            disabled={exchangeRateStatus === "loading"}
+            onClick={() => void refreshExchangeRate()}
+            title={exchangeRateMetadata.message ?? "Actualizar tipo de cambio BCCR"}
+            type="button"
+          >
+            {exchangeRateStatus === "loading" ? "Actualizando..." : getExchangeRateLabel(exchangeRateMetadata.source, exchangeRateMetadata.date)}
+          </button>
+        </>
       ) : null}
     </div>
   );
+}
+
+function ExchangeRateInput({
+  exchangeRate,
+  onRateChange,
+}: Readonly<{
+  exchangeRate: number;
+  onRateChange: (rate: number) => void;
+}>) {
+  const [rateInput, setRateInput] = useState(() => String(exchangeRate));
+
+  function handleRateChange(value: string) {
+    setRateInput(value);
+
+    const parsedRate = Number(value);
+    if (Number.isFinite(parsedRate) && parsedRate > 0) {
+      onRateChange(parsedRate);
+    }
+  }
+
+  function handleRateBlur() {
+    const parsedRate = Number(rateInput);
+
+    if (!Number.isFinite(parsedRate) || parsedRate <= 0) {
+      setRateInput(String(exchangeRate));
+    }
+  }
+
+  return (
+    <label>
+      <span>CRC/USD</span>
+      <input
+        min="1"
+        step="0.01"
+        type="number"
+        value={rateInput}
+        onBlur={handleRateBlur}
+        onChange={(event) => handleRateChange(event.target.value)}
+      />
+    </label>
+  );
+}
+
+function getExchangeRateLabel(source: "BCCR" | "manual" | "fallback", date?: string) {
+  if (source === "BCCR") {
+    return date ? `BCCR ${date}` : "BCCR";
+  }
+
+  if (source === "manual") {
+    return "Manual";
+  }
+
+  return "Fallback";
 }
 
 function FullPageStatus({ title, message }: Readonly<{ title: string; message: string }>) {

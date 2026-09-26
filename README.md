@@ -19,7 +19,7 @@ Small web MVP for monthly patrimony tracking.
 - Calculate retirement compound-interest scenarios live and persist selected saved calculations.
 - View a main dashboard with cumulative patrimony distribution, progress toward the latest retirement goal, and a monthly cumulative line chart from the first recorded investment month to the most recent month with `Aporte` and `Interés` shaded areas; the dashboard date filter uses the selected day's month as the cumulative cutoff for the distribution and retirement cards.
 - Switch between light and dark visual themes from the topbar.
-- Switch the global display currency between CRC and USD from the topbar with a locally persisted manual CRC-to-USD exchange rate; no exchange-rate API is used.
+- Switch the global display currency between CRC and USD from the topbar using the BCCR daily sell exchange rate when configured, with a locally persisted manual fallback.
 - Track the categories the user currently manages:
   - Inversion Bolsa
   - Certificados a Plazo
@@ -73,6 +73,14 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY="your-anon-key"
 ```
 
 If `NEXT_PUBLIC_DATA_SOURCE` is missing or set to anything other than `supabase`, the app uses the in-memory demo repository.
+
+To enable automatic CRC/USD conversion from the Banco Central de Costa Rica, register for the BCCR REST API and add the server-only bearer token:
+
+```bash
+BCCR_TOKEN="your-bccr-token"
+```
+
+The app queries the BCCR REST endpoint with `Authorization: Bearer <token>` and uses indicator `318` (`Tipo de cambio: venta colón/dólar`) for today's Costa Rica CRC-per-USD rate. If the BCCR request fails or the token is missing, the topbar keeps using the last saved/manual rate.
 
 No real credentials should be committed.
 
