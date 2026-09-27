@@ -21,6 +21,7 @@ Small web MVP for monthly patrimony tracking.
 - Switch between light and dark visual themes from the topbar.
 - Switch the global display currency between CRC and USD from the topbar using the BCCR daily sell exchange rate when configured, with a locally persisted manual fallback.
 - Download a user-scoped JSON backup with categories, patrimony records, and saved retirement calculations for manual storage in Google Drive or another safe location.
+- Restore a `schemaVersion: 1` GestionPatrimonio JSON backup by replacing the authenticated user's current categories, patrimony records, and saved retirement calculations.
 - Track the categories the user currently manages:
   - Inversion Bolsa
   - Certificados a Plazo
@@ -84,6 +85,8 @@ BCCR_TOKEN="your-bccr-token"
 The app queries the BCCR REST endpoint with `Authorization: Bearer <token>` and uses indicator `318` (`Tipo de cambio: venta colón/dólar`) for today's Costa Rica CRC-per-USD rate. If the BCCR request fails or the token is missing, the topbar keeps using the last saved/manual rate.
 
 Backups are available from the Backups section. The current implementation downloads a JSON file generated through the active Supabase session and RLS policies; after downloading it, store it manually in Google Drive. Direct Google Drive upload is intentionally left for a later OAuth/API integration.
+
+The Backups section can also import a previously exported `schemaVersion: 1` GestionPatrimonio JSON file. Import is destructive: after the required `RESTORE BACKUP` confirmation, the app deletes the authenticated user's currently visible patrimony records, saved retirement calculations, and categories before inserting the backup data. The import does not trust or restore the backup's original `user.id`; Supabase Auth/RLS owns the restored rows for the active session.
 
 No real credentials should be committed.
 
