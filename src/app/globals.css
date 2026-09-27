@@ -456,8 +456,11 @@ button {
   background: var(--background-soft);
   border: 1px solid var(--border);
   border-radius: 14px;
+  box-sizing: border-box;
   color: var(--foreground);
+  min-width: 0;
   padding: 13px 14px;
+  width: 100%;
 }
 
 .form input:focus,
@@ -534,7 +537,7 @@ button {
 }
 
 .backup-card {
-  max-width: 920px;
+  max-width: 1080px;
 }
 
 .backup-card h1 {
@@ -559,6 +562,49 @@ button {
 .backup-summary span {
   color: var(--muted);
   font-size: 0.92rem;
+}
+
+.backup-actions {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.backup-panel {
+  background: var(--background-soft);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  display: grid;
+  gap: 14px;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  padding: 18px;
+}
+
+.backup-panel h2,
+.backup-panel p {
+  margin: 0;
+}
+
+.backup-panel label {
+  min-width: 0;
+}
+
+.backup-danger-zone {
+  border-color: color-mix(in srgb, var(--danger) 34%, var(--border));
+}
+
+.backup-danger-zone p {
+  color: var(--danger-dark);
+  font-weight: 700;
+}
+
+.form button.danger-button {
+  background: var(--danger);
+}
+
+.form button.danger-button:hover:not(:disabled) {
+  background: var(--danger-dark);
 }
 
 .pill {
@@ -1033,6 +1079,7 @@ button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .backup-actions,
   .backup-summary,
   .metrics-grid,
   .two-column-grid,
