@@ -20,6 +20,7 @@ Small web MVP for monthly patrimony tracking.
 - View a main dashboard with cumulative patrimony distribution, progress toward the latest retirement goal, and a monthly cumulative line chart from the first recorded investment month to the most recent month with `Aporte` and `Interés` shaded areas; the dashboard date filter uses the selected day's month as the cumulative cutoff for the distribution and retirement cards.
 - Switch between light and dark visual themes from the topbar.
 - Switch the global display currency between CRC and USD from the topbar using the BCCR daily sell exchange rate when configured, with a locally persisted manual fallback.
+- Download a user-scoped JSON backup with categories, patrimony records, and saved retirement calculations for manual storage in Google Drive or another safe location.
 - Track the categories the user currently manages:
   - Inversion Bolsa
   - Certificados a Plazo
@@ -82,6 +83,8 @@ BCCR_TOKEN="your-bccr-token"
 
 The app queries the BCCR REST endpoint with `Authorization: Bearer <token>` and uses indicator `318` (`Tipo de cambio: venta colón/dólar`) for today's Costa Rica CRC-per-USD rate. If the BCCR request fails or the token is missing, the topbar keeps using the last saved/manual rate.
 
+Backups are available from the Backups section. The current implementation downloads a JSON file generated through the active Supabase session and RLS policies; after downloading it, store it manually in Google Drive. Direct Google Drive upload is intentionally left for a later OAuth/API integration.
+
 No real credentials should be committed.
 
 ## Local development
@@ -112,6 +115,7 @@ supabase/migrations/005_add_estimated_monthly_amount_to_retirement_calculations.
 supabase/migrations/006_add_user_scoping_and_rls.sql
 supabase/migrations/007_add_category_interest_rate.sql
 supabase/migrations/008_rename_category_and_add_usd_amount.sql
+supabase/migrations/009_add_record_movement_type.sql
 ```
 
 You can paste them into the Supabase SQL editor for the MVP, or run them through the Supabase CLI if the project is linked.
@@ -129,6 +133,8 @@ The sixth migration adds `user_id`, assigns existing data to the configured Supa
 The seventh migration adds optional `interest_rate` to categories.
 
 The eighth migration renames `categoria` to `category`, renames `amount` to `amount_crc`, adds optional `amount_usd`, and refreshes RLS policies that reference the category table.
+
+The ninth migration adds the required `movement_type` value used to distinguish contributions from interest-generated records.
 
 If the app reports schema cache issues, run:
 

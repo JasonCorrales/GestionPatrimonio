@@ -12,6 +12,7 @@ const navigationItems = [
   { href: "/records", label: "Registros", description: "Alta e historial" },
   { href: "/categories", label: "Categorías", description: "Catálogo" },
   { href: "/retirement", label: "Jubilación", description: "Interés compuesto" },
+  { href: "/backups", label: "Backups", description: "Respaldo JSON" },
 ];
 
 type ThemePreference = "light" | "dark";

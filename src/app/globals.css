@@ -533,6 +533,34 @@ button {
   margin-bottom: 18px;
 }
 
+.backup-card {
+  max-width: 920px;
+}
+
+.backup-card h1 {
+  margin: 0;
+}
+
+.backup-summary {
+  display: grid;
+  gap: 12px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.backup-summary article {
+  background: var(--background-soft);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  display: grid;
+  gap: 6px;
+  padding: 16px;
+}
+
+.backup-summary span {
+  color: var(--muted);
+  font-size: 0.92rem;
+}
+
 .pill {
   background: var(--primary-soft);
   border-radius: 999px;
@@ -1005,6 +1033,7 @@ button {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
+  .backup-summary,
   .metrics-grid,
   .two-column-grid,
   .line-chart-summary {
