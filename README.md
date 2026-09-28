@@ -119,6 +119,7 @@ supabase/migrations/006_add_user_scoping_and_rls.sql
 supabase/migrations/007_add_category_interest_rate.sql
 supabase/migrations/008_rename_category_and_add_usd_amount.sql
 supabase/migrations/009_add_record_movement_type.sql
+supabase/migrations/010_add_active_retirement_calculation.sql
 ```
 
 You can paste them into the Supabase SQL editor for the MVP, or run them through the Supabase CLI if the project is linked.
@@ -138,6 +139,8 @@ The seventh migration adds optional `interest_rate` to categories.
 The eighth migration renames `categoria` to `category`, renames `amount` to `amount_crc`, adds optional `amount_usd`, and refreshes RLS policies that reference the category table.
 
 The ninth migration adds the required `movement_type` value used to distinguish contributions from interest-generated records.
+
+The tenth migration adds a required retirement scenario description and active-retirement selection, with database safeguards so only one retirement calculation is active per user.
 
 If the app reports schema cache issues, run:
 

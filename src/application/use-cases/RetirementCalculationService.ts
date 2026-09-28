@@ -5,6 +5,10 @@ import {
 } from "@/domain/retirementCalculation";
 import type { RetirementCalculationRepository } from "../ports/RetirementCalculationRepository";
 
+export type SaveRetirementCalculationRequest = RetirementCalculationInput & {
+  description: string;
+};
+
 export class RetirementCalculationService {
   constructor(private readonly repository: RetirementCalculationRepository) {}
 
@@ -20,12 +24,32 @@ export class RetirementCalculationService {
     );
   }
 
+  async getActiveCalculation(): Promise<SavedRetirementCalculation | null> {
+    return this.repository.getActive();
+  }
+
   async saveCalculation(
-    input: RetirementCalculationInput,
+    input: SaveRetirementCalculationRequest,
   ): Promise<SavedRetirementCalculation> {
     validateRetirementCalculation(input);
+    const description = validateRetirementCalculationDescription(input.description);
     const result = calculateRetirementProjection(input);
-    return this.repository.save({ ...input, ...result });
+    const activeCalculation = await this.repository.getActive();
+
+    return this.repository.save({
+      ...input,
+      ...result,
+      description,
+      isActive: activeCalculation === null,
+    });
+  }
+
+  async activateCalculation(id: string): Promise<SavedRetirementCalculation> {
+    if (!id) {
+      throw new Error("Retirement calculation id is required.");
+    }
+
+    return this.repository.setActive(id);
   }
 
   async deleteCalculation(id: string): Promise<void> {
@@ -53,4 +77,14 @@ export function validateRetirementCalculation(input: RetirementCalculationInput)
   if (!Number.isFinite(input.durationYears) || input.durationYears <= 0) {
     throw new Error("Duration must be greater than zero.");
   }
+}
+
+export function validateRetirementCalculationDescription(description: string) {
+  const normalizedDescription = description.trim();
+
+  if (!normalizedDescription) {
+    throw new Error("Retirement calculation description is required.");
+  }
+
+  return normalizedDescription;
 }

@@ -46,6 +46,8 @@ type BackupPatrimonyRecord = {
 };
 
 type BackupRetirementCalculation = {
+  description: string;
+  is_active: boolean;
   initial_balance: NumericValue;
   periodic_amount: NumericValue;
   annual_interest_rate: NumericValue;
@@ -329,6 +331,8 @@ function parseRetirementCalculations(calculations: unknown[]): Result<BackupReti
     }
 
     const {
+      description,
+      is_active,
       initial_balance,
       periodic_amount,
       annual_interest_rate,
@@ -339,6 +343,9 @@ function parseRetirementCalculations(calculations: unknown[]): Result<BackupReti
       estimated_monthly_amount,
       created_at,
     } = calculation;
+    const normalizedDescription = isNonEmptyString(description)
+      ? description.trim()
+      : `Escenario importado ${index + 1}`;
 
     if (
       !isNumeric(initial_balance) ||
@@ -357,7 +364,13 @@ function parseRetirementCalculations(calculations: unknown[]): Result<BackupReti
       return { ok: false, error: `Retirement calculation at index ${index} has an invalid created_at timestamp.` };
     }
 
+    if (is_active !== undefined && typeof is_active !== "boolean") {
+      return { ok: false, error: `Retirement calculation at index ${index} has an invalid is_active flag.` };
+    }
+
     parsed.push({
+      description: normalizedDescription,
+      is_active: is_active === true,
       initial_balance,
       periodic_amount,
       annual_interest_rate,
@@ -445,7 +458,14 @@ async function restoreBackupData(supabase: BackupSupabaseClient, backup: BackupP
     }
   }
 
-  const retirementRows = backup.data.retirementCalculations.map((calculation) => ({
+  const activeRetirementCalculationIndex = backup.data.retirementCalculations.findIndex(
+    (calculation) => calculation.is_active,
+  );
+  const retirementRows = backup.data.retirementCalculations.map((calculation, index) => ({
+    description: calculation.description,
+    is_active: activeRetirementCalculationIndex >= 0
+      ? index === activeRetirementCalculationIndex
+      : index === 0,
     initial_balance: calculation.initial_balance,
     periodic_amount: calculation.periodic_amount,
     annual_interest_rate: calculation.annual_interest_rate,

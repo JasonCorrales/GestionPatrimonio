@@ -9,6 +9,8 @@ const TABLE_NAME = "retirement_calculations";
 
 type RetirementCalculationRow = {
   id: string;
+  description: string;
+  is_active: boolean;
   initial_balance: number;
   periodic_amount: number;
   annual_interest_rate: number;
@@ -38,6 +40,20 @@ export class SupabaseRetirementCalculationRepository
     return (data ?? []).map(fromRow);
   }
 
+  async getActive(): Promise<SavedRetirementCalculation | null> {
+    const { data, error } = await this.supabase
+      .from(TABLE_NAME)
+      .select("*")
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (error) {
+      throw error;
+    }
+
+    return data ? fromRow(data) : null;
+  }
+
   async save(
     input: SaveRetirementCalculationInput,
   ): Promise<SavedRetirementCalculation> {
@@ -54,7 +70,41 @@ export class SupabaseRetirementCalculationRepository
     return fromRow(data);
   }
 
+  async setActive(id: string): Promise<SavedRetirementCalculation> {
+    const { error: clearError } = await this.supabase
+      .from(TABLE_NAME)
+      .update({ is_active: false })
+      .eq("is_active", true);
+
+    if (clearError) {
+      throw clearError;
+    }
+
+    const { data, error } = await this.supabase
+      .from(TABLE_NAME)
+      .update({ is_active: true })
+      .eq("id", id)
+      .select("*")
+      .single();
+
+    if (error) {
+      throw error;
+    }
+
+    return fromRow(data);
+  }
+
   async delete(id: string): Promise<void> {
+    const { data: existing, error: existingError } = await this.supabase
+      .from(TABLE_NAME)
+      .select("is_active")
+      .eq("id", id)
+      .single();
+
+    if (existingError) {
+      throw existingError;
+    }
+
     const { error } = await this.supabase
       .from(TABLE_NAME)
       .delete()
@@ -63,12 +113,22 @@ export class SupabaseRetirementCalculationRepository
     if (error) {
       throw error;
     }
+
+    if (existing?.is_active) {
+      const [nextActive] = await this.list();
+
+      if (nextActive) {
+        await this.setActive(nextActive.id);
+      }
+    }
   }
 }
 
 function fromRow(row: RetirementCalculationRow): SavedRetirementCalculation {
   return {
     id: row.id,
+    description: row.description,
+    isActive: row.is_active,
     initialBalance: Number(row.initial_balance),
     periodicAmount: Number(row.periodic_amount),
     annualInterestRate: Number(row.annual_interest_rate),
@@ -83,6 +143,8 @@ function fromRow(row: RetirementCalculationRow): SavedRetirementCalculation {
 
 function toInsertRow(input: SaveRetirementCalculationInput) {
   return {
+    description: input.description,
+    is_active: input.isActive,
     initial_balance: input.initialBalance,
     periodic_amount: input.periodicAmount,
     annual_interest_rate: input.annualInterestRate,

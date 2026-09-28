@@ -15,6 +15,7 @@ export function RetirementCalculator() {
     () => new RetirementCalculationService(createRetirementCalculationRepository()),
     [],
   );
+  const [description, setDescription] = useState("");
   const [initialBalance, setInitialBalance] = useState(0);
   const [periodicAmount, setPeriodicAmount] = useState(300000);
   const [annualInterestRate, setAnnualInterestRate] = useState(8);
@@ -44,17 +45,42 @@ export function RetirementCalculator() {
     event.preventDefault();
 
     try {
-      const saved = await service.saveCalculation(currentInput);
-      setSavedCalculations((current) => [saved, ...current]);
-      setMessage("Cálculo de jubilación guardado.");
+      const saved = await service.saveCalculation({
+        ...currentInput,
+        description,
+      });
+      setSavedCalculations((current) => saved.isActive
+        ? [saved, ...current.map((item) => ({ ...item, isActive: false }))]
+        : [saved, ...current]);
+      setDescription("");
+      setMessage(saved.isActive
+        ? "Cálculo de jubilación guardado y activado."
+        : "Cálculo de jubilación guardado.");
     } catch (error) {
       setMessage(`No se pudo guardar el cálculo: ${getErrorMessage(error)}`);
     }
   }
 
+  async function activateCalculation(calculation: SavedRetirementCalculation) {
+    if (calculation.isActive) {
+      return;
+    }
+
+    try {
+      const activeCalculation = await service.activateCalculation(calculation.id);
+      setSavedCalculations((current) => current.map((item) => ({
+        ...item,
+        isActive: item.id === activeCalculation.id,
+      })));
+      setMessage(`Escenario activo: ${activeCalculation.description}.`);
+    } catch (error) {
+      setMessage(`No se pudo activar el cálculo: ${getErrorMessage(error)}`);
+    }
+  }
+
   async function deleteCalculation(calculation: SavedRetirementCalculation) {
     const confirmed = window.confirm(
-      `¿Eliminar el cálculo guardado por ${formatCrcAmount(calculation.finalAmount)}?`,
+      `¿Eliminar el cálculo "${calculation.description}" por ${formatCrcAmount(calculation.finalAmount)}?`,
     );
 
     if (!confirmed) {
@@ -63,9 +89,8 @@ export function RetirementCalculator() {
 
     try {
       await service.deleteCalculation(calculation.id);
-      setSavedCalculations((current) =>
-        current.filter((item) => item.id !== calculation.id),
-      );
+      const refreshedCalculations = await service.listSavedCalculations();
+      setSavedCalculations(refreshedCalculations);
       setMessage("Cálculo guardado eliminado.");
     } catch (error) {
       setMessage(`No se pudo eliminar el cálculo: ${getErrorMessage(error)}`);
@@ -103,6 +128,18 @@ export function RetirementCalculator() {
             <p className="eyebrow">Simulación</p>
             <h2>Variables del cálculo</h2>
           </div>
+
+          <label>
+            Nombre o descripción del escenario
+            <input
+              maxLength={120}
+              required
+              type="text"
+              value={description}
+              onChange={(event) => setDescription(event.target.value)}
+              placeholder="Ej. Jubilación conservadora"
+            />
+          </label>
 
           <label>
             Balance inicial (CRC)
@@ -202,17 +239,27 @@ export function RetirementCalculator() {
         ) : (
           <div className="records">
             {savedCalculations.map((calculation) => (
-              <article key={calculation.id} className="record">
+              <article key={calculation.id} className="record retirement-record">
                 <div>
-                  <strong>{formatCrcAmount(calculation.finalAmount)}</strong>
+                  <div className="record-heading-row">
+                    <strong>{calculation.description}</strong>
+                    {calculation.isActive ? <span className="pill">Activo</span> : null}
+                  </div>
                   <p>
-                    Inicial {formatCrcAmount(calculation.initialBalance)} · Mensual {formatCrcAmount(calculation.periodicAmount)} · {percentFormatter.format(calculation.annualInterestRate)}% · {calculation.durationYears} años
+                    Meta {formatCrcAmount(calculation.finalAmount)} · Inicial {formatCrcAmount(calculation.initialBalance)} · Mensual {formatCrcAmount(calculation.periodicAmount)} · {percentFormatter.format(calculation.annualInterestRate)}% · {calculation.durationYears} años
                   </p>
                 </div>
                 <div className="record-actions">
                   <span className="pill">
                     Mensual estimado: {formatCrcAmount(calculation.estimatedMonthlyAmount)}
                   </span>
+                  <button
+                    disabled={calculation.isActive}
+                    type="button"
+                    onClick={() => activateCalculation(calculation)}
+                  >
+                    {calculation.isActive ? "Activo" : "Marcar activo"}
+                  </button>
                   <button
                     className="danger-button"
                     type="button"

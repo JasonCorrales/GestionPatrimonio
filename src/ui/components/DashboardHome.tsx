@@ -36,11 +36,11 @@ export function DashboardHome() {
   useEffect(() => {
     Promise.all([
       patrimonyService.listRecords(),
-      retirementService.listSavedCalculations(),
+      retirementService.getActiveCalculation(),
     ])
-      .then(([loadedRecords, savedCalculations]) => {
+      .then(([loadedRecords, activeCalculation]) => {
         setRecords(loadedRecords);
-        setRetirementGoal(savedCalculations[0] ?? null);
+        setRetirementGoal(activeCalculation);
       })
       .catch((error) => {
         setMessage(`No se pudo cargar el dashboard: ${getErrorMessage(error)}`);
@@ -65,7 +65,7 @@ export function DashboardHome() {
           <p className="eyebrow">Dashboard</p>
           <h1>Resumen patrimonial</h1>
           <p>
-            Visualizá tu patrimonio acumulado hasta el mes seleccionado y el avance contra tu última meta de jubilación guardada.
+            Visualizá tu patrimonio acumulado hasta el mes seleccionado y el avance contra tu meta de jubilación activa.
           </p>
         </div>
         <label className="month-filter">
@@ -155,7 +155,7 @@ export function DashboardHome() {
                 <span>Faltan {formatCurrency(retirementGap)}</span>
               </div>
               <p className="message">
-                Meta tomada del último cálculo guardado el {formatDate(retirementGoal.createdAt)}.
+                Meta activa: {retirementGoal.description}. Guardada el {formatDate(retirementGoal.createdAt)}.
               </p>
             </div>
           ) : (
