@@ -1062,6 +1062,17 @@ button {
   padding: 16px;
 }
 
+.record-heading-row {
+  align-items: center;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.retirement-record > div:first-child {
+  min-width: 0;
+}
+
 .record-actions {
   justify-content: flex-end;
 }

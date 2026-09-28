@@ -72,7 +72,7 @@ export async function GET(request: NextRequest) {
       .order("created_at", { ascending: true }),
     supabase
       .from(RETIREMENT_TABLE_NAME)
-      .select("id, initial_balance, periodic_amount, annual_interest_rate, duration_years, final_amount, total_contributed, estimated_interest, estimated_monthly_amount, created_at")
+      .select("id, description, is_active, initial_balance, periodic_amount, annual_interest_rate, duration_years, final_amount, total_contributed, estimated_interest, estimated_monthly_amount, created_at")
       .order("created_at", { ascending: true }),
   ]);
 

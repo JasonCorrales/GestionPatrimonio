@@ -15,6 +15,8 @@ export type RetirementCalculationResult = {
 export type SavedRetirementCalculation = RetirementCalculationInput &
   RetirementCalculationResult & {
     id: string;
+    description: string;
+    isActive: boolean;
     createdAt: string;
   };
 
