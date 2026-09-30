@@ -154,8 +154,10 @@ export function DashboardHome() {
                 <strong>{percentFormatter.format(retirementProgress)}%</strong>
                 <span>Faltan {formatCurrency(retirementGap)}</span>
               </div>
-              <p className="message">
-                Meta activa: {retirementGoal.description}. Guardada el {formatDate(retirementGoal.createdAt)}.
+              <p className="active-retirement-goal">
+                <span>Meta activa</span>
+                <strong>{retirementGoal.description}</strong>
+                <small>Guardada el {formatDate(retirementGoal.createdAt)}.</small>
               </p>
             </div>
           ) : (

@@ -1050,6 +1050,29 @@ button {
   font-weight: 800;
 }
 
+.active-retirement-goal {
+  background: linear-gradient(135deg, var(--primary-soft), color-mix(in srgb, #32a6a6 14%, transparent));
+  border: 1px solid color-mix(in srgb, var(--primary) 24%, var(--border));
+  border-radius: 18px;
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 16px;
+}
+
+.active-retirement-goal span,
+.active-retirement-goal small {
+  color: var(--muted);
+  font-weight: 800;
+}
+
+.active-retirement-goal strong {
+  color: var(--primary-dark);
+  font-size: clamp(1.25rem, 2vw, 1.8rem);
+  line-height: 1.15;
+  overflow-wrap: anywhere;
+}
+
 .record,
 .category-item {
   align-items: center;
