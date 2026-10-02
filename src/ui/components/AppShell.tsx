@@ -25,6 +25,8 @@ export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
   const [session, setSession] = useState<Session | null>(null);
   const [loadingSession, setLoadingSession] = useState(true);
   const [authError, setAuthError] = useState<string | null>(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [mobileTopbarToolsOpen, setMobileTopbarToolsOpen] = useState(false);
 
   useEffect(() => {
     document.documentElement.dataset.theme = theme;
@@ -114,57 +116,87 @@ export function AppShell({ children }: Readonly<{ children: ReactNode }>) {
     <CurrencyPreferenceProvider>
       <div className="app-shell">
         <aside className="sidebar">
-        <Link className="brand" href="/">
-          <span className="brand-mark">GP</span>
-          <span>
-            <strong>Gestión Patrimonio</strong>
-            <small>MVP</small>
-          </span>
-        </Link>
+          <div className="sidebar-header">
+            <Link className="brand" href="/" onClick={() => setMobileMenuOpen(false)}>
+              <span className="brand-mark">GP</span>
+              <span>
+                <strong>Gestión Patrimonio</strong>
+                <small>MVP</small>
+              </span>
+            </Link>
+            <button
+              aria-controls="main-navigation"
+              aria-expanded={mobileMenuOpen}
+              className="mobile-menu-toggle"
+              onClick={() => setMobileMenuOpen((isOpen) => !isOpen)}
+              type="button"
+            >
+              {mobileMenuOpen ? "Cerrar menú" : "Menú"}
+            </button>
+          </div>
 
-        <nav className="sidebar-nav" aria-label="Navegación principal">
-          {navigationItems.map((item) => {
-            const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
+          <nav
+            aria-label="Navegación principal"
+            className={mobileMenuOpen ? "sidebar-nav open" : "sidebar-nav"}
+            id="main-navigation"
+          >
+            {navigationItems.map((item) => {
+              const active = item.href === "/" ? pathname === "/" : pathname.startsWith(item.href);
 
-            return (
-              <Link
-                aria-current={active ? "page" : undefined}
-                className={active ? "nav-item active" : "nav-item"}
-                href={item.href}
-                key={item.href}
-              >
-                <span>{item.label}</span>
-                <small>{item.description}</small>
-              </Link>
-            );
-          })}
-        </nav>
+              return (
+                <Link
+                  aria-current={active ? "page" : undefined}
+                  className={active ? "nav-item active" : "nav-item"}
+                  href={item.href}
+                  key={item.href}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <span>{item.label}</span>
+                  <small>{item.description}</small>
+                </Link>
+              );
+            })}
+          </nav>
         </aside>
 
         <div className="app-main">
-        <header className="topbar">
-          <div>
-            <span className="topbar-kicker">Control financiero personal</span>
-            <strong>Patrimonio mensual</strong>
-          </div>
-          <div className="topbar-actions">
-            <CurrencyPreferenceControls />
-            <button
-              aria-label={theme === "light" ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
-              className="theme-toggle"
-              onClick={toggleTheme}
-              title={theme === "light" ? "Modo oscuro" : "Modo claro"}
-              type="button"
-            >
-              {theme === "light" ? "🌙" : "☀️"}
-            </button>
-            <div className="session-chip">
-              <span>{session.user.email}</span>
-              <button type="button" onClick={handleSignOut}>Salir</button>
+          <header className="topbar">
+            <div className="topbar-summary">
+              <div>
+                <span className="topbar-kicker">Control financiero personal</span>
+                <strong>Patrimonio mensual</strong>
+              </div>
+              <button
+                aria-controls="topbar-tools"
+                aria-expanded={mobileTopbarToolsOpen}
+                className="topbar-tools-toggle"
+                onClick={() => setMobileTopbarToolsOpen((isOpen) => !isOpen)}
+                type="button"
+              >
+                {mobileTopbarToolsOpen ? "Cerrar opciones" : "Opciones"}
+              </button>
             </div>
-          </div>
-        </header>
-        <main className="page-container">{children}</main>
+            <div
+              className={mobileTopbarToolsOpen ? "topbar-actions open" : "topbar-actions"}
+              id="topbar-tools"
+            >
+              <CurrencyPreferenceControls />
+              <button
+                aria-label={theme === "light" ? "Cambiar a modo oscuro" : "Cambiar a modo claro"}
+                className="theme-toggle"
+                onClick={toggleTheme}
+                title={theme === "light" ? "Modo oscuro" : "Modo claro"}
+                type="button"
+              >
+                {theme === "light" ? "🌙" : "☀️"}
+              </button>
+              <div className="session-chip">
+                <span>{session.user.email}</span>
+                <button type="button" onClick={handleSignOut}>Salir</button>
+              </div>
+            </div>
+          </header>
+          <main className="page-container">{children}</main>
         </div>
       </div>
     </CurrencyPreferenceProvider>
