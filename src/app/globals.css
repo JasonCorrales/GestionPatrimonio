@@ -94,12 +94,29 @@ button {
   padding: 28px;
 }
 
+.sidebar-header {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
 .brand {
   align-items: center;
   color: var(--sidebar-text);
   display: flex;
   gap: 14px;
   text-decoration: none;
+}
+
+.mobile-menu-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 999px;
+  color: var(--sidebar-text);
+  display: none;
+  font-weight: 800;
+  padding: 10px 14px;
 }
 
 .brand-mark {
@@ -171,6 +188,23 @@ button {
 .topbar strong,
 .topbar-kicker {
   display: block;
+}
+
+.topbar-summary {
+  align-items: center;
+  display: flex;
+  gap: 16px;
+  justify-content: space-between;
+}
+
+.topbar-tools-toggle {
+  background: var(--surface-strong);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  color: var(--foreground);
+  display: none;
+  font-weight: 800;
+  padding: 10px 14px;
 }
 
 .topbar-actions {
@@ -255,6 +289,8 @@ button {
   color: var(--muted);
   font-size: 0.9rem;
   font-weight: 700;
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 
 .session-chip button {
@@ -1106,11 +1142,21 @@ button {
   }
 
   .sidebar {
+    gap: 16px;
     position: static;
   }
 
+  .mobile-menu-toggle {
+    display: inline-flex;
+  }
+
   .sidebar-nav {
+    display: none;
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .sidebar-nav.open {
+    display: grid;
   }
 
   .backup-actions,
@@ -1119,6 +1165,102 @@ button {
   .two-column-grid,
   .line-chart-summary {
     grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .topbar,
+  .dashboard-heading,
+  .category-item,
+  .record,
+  .section-title-row,
+  .session-chip,
+  .tabs {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .topbar {
+    gap: 16px;
+  }
+
+  .topbar-summary {
+    width: 100%;
+  }
+
+  .topbar-tools-toggle {
+    display: inline-flex;
+  }
+
+  .topbar-actions {
+    display: none;
+  }
+
+  .topbar-actions.open {
+    display: flex;
+  }
+
+  .topbar-actions,
+  .currency-controls,
+  .currency-controls label,
+  .exchange-rate-refresh,
+  .session-chip,
+  .tabs,
+  .tab-button,
+  .month-filter {
+    width: 100%;
+  }
+
+  .topbar-actions,
+  .currency-controls {
+    align-items: stretch;
+  }
+
+  .currency-controls {
+    flex-direction: column;
+  }
+
+  .currency-controls label {
+    justify-content: space-between;
+  }
+
+  .session-chip {
+    border-radius: 18px;
+  }
+
+  .session-chip button,
+  .record-actions,
+  .form-actions {
+    width: 100%;
+  }
+
+  .session-chip button,
+  .record-actions button,
+  .form-actions button {
+    justify-content: center;
+    text-align: center;
+  }
+
+  .summary-list div,
+  .progress-footer {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 6px;
+  }
+
+  .history-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .chart-layout {
+    grid-template-columns: 1fr;
+    justify-items: center;
+  }
+
+  .chart-legend,
+  .progress-panel {
+    justify-self: stretch;
+    width: 100%;
   }
 }
 
@@ -1137,32 +1279,51 @@ button {
     grid-template-columns: 1fr;
   }
 
-  .category-item,
-  .currency-controls,
-  .record,
-  .section-title-row,
-  .session-chip,
-  .topbar,
-  .dashboard-heading,
-  .tabs {
-    align-items: flex-start;
-    flex-direction: column;
-  }
-
-  .history-controls {
-    grid-template-columns: 1fr;
-  }
-
-  .chart-layout {
-    grid-template-columns: 1fr;
-  }
-
   .donut-chart {
-    height: 220px;
-    width: 220px;
+    height: min(220px, 72vw);
+    width: min(220px, 72vw);
   }
 
   .record-actions {
     justify-content: flex-start;
+  }
+}
+
+@media (max-width: 480px) {
+  .page-container,
+  .topbar,
+  .sidebar {
+    padding: 16px;
+  }
+
+  .page-heading,
+  .card,
+  .metric-card {
+    border-radius: 20px;
+    padding: 18px;
+  }
+
+  .brand {
+    align-items: flex-start;
+  }
+
+  .brand-mark {
+    height: 42px;
+    min-width: 42px;
+    width: 42px;
+  }
+
+  .page-heading h1 {
+    font-size: clamp(1.85rem, 12vw, 2.45rem);
+  }
+
+  .metric-card strong,
+  .progress-summary strong,
+  .projection-result strong {
+    font-size: clamp(1.6rem, 10vw, 2.2rem);
+  }
+
+  .line-chart {
+    min-width: 520px;
   }
 }
