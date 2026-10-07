@@ -6,7 +6,7 @@ import type { SavedRetirementCalculation } from "@/domain/retirementCalculation"
 import { createRetirementCalculationRepository } from "@/data/createRetirementCalculationRepository";
 import { useCurrencyPreference } from "@/ui/currency";
 
-const percentFormatter = new Intl.NumberFormat("es-CR", {
+const percentFormatter = new Intl.NumberFormat("es-ES", {
   maximumFractionDigits: 2,
 });
 
