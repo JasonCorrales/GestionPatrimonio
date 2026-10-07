@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useEffect, useMemo, useState } from "react";
-import type { PatrimonyMovementType } from "@/domain/monthlyPatrimonyRecord";
+import type { PatrimonyInvestmentType, PatrimonyMovementType } from "@/domain/monthlyPatrimonyRecord";
 import type { PatrimonyCategory } from "@/domain/patrimonyCategory";
 import {
   PatrimonyRecordService,
@@ -14,6 +14,7 @@ import { PatrimonyBulkImport } from "./PatrimonyBulkImport";
 
 type RecordsTab = "entry" | "history";
 type MovementTypeFormValue = PatrimonyMovementType | "";
+type InvestmentTypeFormValue = PatrimonyInvestmentType | "";
 type MovementTypeFilterValue = PatrimonyMovementType | "all";
 
 export function PatrimonyRecords() {
@@ -28,6 +29,7 @@ export function PatrimonyRecords() {
   const [amountCrc, setAmountCrc] = useState(0);
   const [amountUsd, setAmountUsd] = useState("");
   const [movementType, setMovementType] = useState<MovementTypeFormValue>("");
+  const [investmentType, setInvestmentType] = useState<InvestmentTypeFormValue>("fixed_income");
   const [notes, setNotes] = useState("");
   const [editingRecordId, setEditingRecordId] = useState<string | null>(null);
   const [categories, setCategories] = useState<PatrimonyCategory[]>([]);
@@ -88,6 +90,7 @@ export function PatrimonyRecords() {
           amountCrc,
           amountUsd: parseOptionalNumber(amountUsd),
           movementType: parseMovementType(movementType),
+          investmentType: parseInvestmentType(investmentType),
           notes,
         });
         setRecords((current) => sortRecords(current.map((record) =>
@@ -106,6 +109,7 @@ export function PatrimonyRecords() {
         amountCrc,
         amountUsd: parseOptionalNumber(amountUsd),
         movementType: parseMovementType(movementType),
+        investmentType: parseInvestmentType(investmentType),
         notes,
       });
       setRecords((current) => sortRecords([created, ...current]));
@@ -133,6 +137,7 @@ export function PatrimonyRecords() {
     setAmountCrc(record.amountCrc);
     setAmountUsd(record.amountUsd?.toString() ?? "");
     setMovementType(record.movementType ?? "");
+    setInvestmentType(record.investmentType);
     setNotes(record.notes ?? "");
     setActiveTab("entry");
     setMessage("Editando el registro seleccionado.");
@@ -145,6 +150,7 @@ export function PatrimonyRecords() {
     setAmountCrc(record.amountCrc);
     setAmountUsd(record.amountUsd?.toString() ?? "");
     setMovementType(record.movementType ?? "");
+    setInvestmentType(record.investmentType);
     setNotes(record.notes ?? "");
     setActiveTab("entry");
     setMessage("Registro duplicado en el formulario. Revisá los datos y guardalo como nuevo registro.");
@@ -183,6 +189,7 @@ export function PatrimonyRecords() {
     setAmountCrc(0);
     setAmountUsd("");
     setMovementType("");
+    setInvestmentType("fixed_income");
     setNotes("");
   }
 
@@ -273,6 +280,18 @@ export function PatrimonyRecords() {
                 <option value="">Seleccioná un tipo</option>
                 <option value="contribution">Aporte</option>
                 <option value="interest">Interés</option>
+              </select>
+            </label>
+
+            <label>
+              Tipo de inversión
+              <select
+                required
+                value={investmentType}
+                onChange={(event) => setInvestmentType(event.target.value as InvestmentTypeFormValue)}
+              >
+                <option value="fixed_income">Renta Fija</option>
+                <option value="variable_income">Renta Variable</option>
               </select>
             </label>
 
@@ -420,7 +439,7 @@ export function PatrimonyRecords() {
                         <div>
                           <strong>{formatDate(record.recordDate)}</strong>
                           <p>
-                            {record.category.name} · {formatMovementType(record.movementType)} · {record.notes ?? "Sin nota"}
+                            {record.category.name} · {formatMovementType(record.movementType)} · {formatInvestmentType(record.investmentType)} · {record.notes ?? "Sin nota"}
                           </p>
                         </div>
                         <div className="record-actions">
@@ -517,6 +536,16 @@ function parseMovementType(value: MovementTypeFormValue): PatrimonyMovementType 
   return value;
 }
 
+function parseInvestmentType(value: InvestmentTypeFormValue): PatrimonyInvestmentType {
+  if (value === "") {
+    throw new PatrimonyRecordValidationException([
+      { field: "investmentType", message: "Tipo de inversión es requerido." },
+    ]);
+  }
+
+  return value;
+}
+
 function formatMovementType(value: PatrimonyMovementType | null) {
   if (value === "contribution") {
     return "Aporte";
@@ -527,6 +556,10 @@ function formatMovementType(value: PatrimonyMovementType | null) {
   }
 
   return "Tipo pendiente";
+}
+
+function formatInvestmentType(value: PatrimonyInvestmentType) {
+  return value === "variable_income" ? "Renta Variable" : "Renta Fija";
 }
 
 function getErrorMessage(error: unknown) {

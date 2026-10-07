@@ -844,6 +844,41 @@ button {
   height: 100%;
 }
 
+.dashboard-wide-card {
+  grid-column: 1 / -1;
+}
+
+.retirement-dashboard-card {
+  gap: 14px;
+  padding-block: 18px;
+}
+
+.retirement-dashboard-card .progress-panel {
+  align-items: center;
+  gap: 10px 20px;
+  grid-template-columns: minmax(280px, 1fr) minmax(220px, 0.85fr);
+}
+
+.retirement-dashboard-card .progress-track {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+.retirement-dashboard-card .progress-footer {
+  grid-column: 1;
+  grid-row: 2;
+}
+
+.retirement-dashboard-card .active-retirement-goal {
+  grid-column: 2;
+  grid-row: 1 / span 2;
+  padding: 12px 14px;
+}
+
+.retirement-dashboard-card .active-retirement-goal strong {
+  font-size: clamp(1.05rem, 1.6vw, 1.35rem);
+}
+
 .chart-layout {
   align-items: center;
   display: grid;
@@ -1261,6 +1296,17 @@ button {
   .progress-panel {
     justify-self: stretch;
     width: 100%;
+  }
+
+  .retirement-dashboard-card .progress-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .retirement-dashboard-card .progress-track,
+  .retirement-dashboard-card .progress-footer,
+  .retirement-dashboard-card .active-retirement-goal {
+    grid-column: auto;
+    grid-row: auto;
   }
 }
 

@@ -37,16 +37,13 @@ type BCCRExchangeRateResponse = {
   label: string;
 };
 
-const crcFormatter = new Intl.NumberFormat("es-CR", {
-  style: "currency",
-  currency: "CRC",
+const crcFormatter = new Intl.NumberFormat("es-ES", {
   maximumFractionDigits: 0,
 });
 
-const usdFormatter = new Intl.NumberFormat("en-US", {
-  style: "currency",
-  currency: "USD",
+const usdFormatter = new Intl.NumberFormat("es-ES", {
   maximumFractionDigits: 2,
+  minimumFractionDigits: 2,
 });
 
 type CurrencyPreferenceContextValue = {
@@ -188,11 +185,21 @@ export function useCurrencyPreference() {
 }
 
 export function formatCrc(amount: number) {
-  return crcFormatter.format(amount);
+  return formatSignedCurrency(amount, "₡", crcFormatter);
 }
 
 export function formatUsd(amount: number) {
-  return usdFormatter.format(amount);
+  return formatSignedCurrency(amount, "$", usdFormatter);
+}
+
+function formatSignedCurrency(
+  amount: number,
+  symbol: string,
+  formatter: Intl.NumberFormat,
+) {
+  const sign = amount < 0 ? "-" : "";
+
+  return `${sign}${symbol}${formatter.format(Math.abs(amount))}`;
 }
 
 function getInitialDisplayCurrency(): DisplayCurrency {

@@ -3,7 +3,7 @@
 import { ChangeEvent, useState } from "react";
 import { readSheet } from "read-excel-file/browser";
 import type { PatrimonyRecordInput } from "@/application/ports/PatrimonyRecordRepository";
-import type { PatrimonyMovementType } from "@/domain/monthlyPatrimonyRecord";
+import type { PatrimonyInvestmentType, PatrimonyMovementType } from "@/domain/monthlyPatrimonyRecord";
 import {
   PatrimonyRecordService,
   type PatrimonyRecordView,
@@ -25,6 +25,7 @@ type HeaderMap = {
   amountCrc?: number;
   amountUsd?: number;
   movementType?: number;
+  investmentType?: number;
   notes?: number;
 };
 
@@ -35,7 +36,7 @@ export function PatrimonyBulkImport({
 }: PatrimonyBulkImportProps) {
   const [importing, setImporting] = useState(false);
   const [message, setMessage] = useState(
-    "Formato esperado: Fecha, Categoria, Tipo de movimiento, Monto CRC, Monto USD, Nota. Monto USD y nota son opcionales.",
+    "Formato esperado: Fecha, Categoria, Tipo de movimiento, Tipo de inversión, Monto CRC, Monto USD, Nota. Tipo de inversión, monto USD y nota son opcionales; si falta, se usa Renta Fija.",
   );
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
@@ -68,7 +69,7 @@ export function PatrimonyBulkImport({
         <p className="eyebrow">Carga masiva</p>
         <h2>Importar desde Excel</h2>
         <p className="muted">
-          Usá una hoja con encabezados <strong>Fecha</strong>, <strong>Categoria</strong>, <strong>Tipo de movimiento</strong>, <strong>Monto CRC</strong>, <strong>Monto USD</strong> y <strong>Nota</strong>. La categoría debe existir en el catálogo.
+          Usá una hoja con encabezados <strong>Fecha</strong>, <strong>Categoria</strong>, <strong>Tipo de movimiento</strong>, <strong>Tipo de inversión</strong>, <strong>Monto CRC</strong>, <strong>Monto USD</strong> y <strong>Nota</strong>. La categoría debe existir en el catálogo; el tipo de inversión es opcional y por defecto será Renta Fija.
         </p>
       </div>
 
@@ -84,6 +85,10 @@ export function PatrimonyBulkImport({
         <div>
           <strong>Tipo de movimiento</strong>
           <span>Requerido. Usá Aporte o Interés.</span>
+        </div>
+        <div>
+          <strong>Tipo de inversión</strong>
+          <span>Opcional. Usá Renta Fija o Renta Variable. Si se omite, se importa como Renta Fija.</span>
         </div>
         <div>
           <strong>Monto CRC</strong>
@@ -157,6 +162,9 @@ function parseRows(rows: ExcelRow[], categories: PatrimonyCategory[]): Patrimony
       ? null
       : parseOptionalAmount(row[headerMap.amountUsd]);
     const movementType = parseMovementType(row[headerMap.movementType!], rowNumber);
+    const investmentType = headerMap.investmentType === undefined
+      ? "fixed_income"
+      : parseInvestmentType(row[headerMap.investmentType], rowNumber);
 
     if (!Number.isFinite(amountCrc) || amountCrc < 0) {
       throw new Error(`Fila ${rowNumber}: monto CRC inválido.`);
@@ -172,6 +180,7 @@ function parseRows(rows: ExcelRow[], categories: PatrimonyCategory[]): Patrimony
       amountCrc,
       amountUsd,
       movementType,
+      investmentType,
       notes: headerMap.notes === undefined ? undefined : String(row[headerMap.notes] ?? "") || undefined,
     });
   });
@@ -199,6 +208,10 @@ function mapHeaders(headerRow: ExcelRow): HeaderMap {
 
     if (["tipo", "tipo movimiento", "tipo de movimiento", "movimiento", "movement type", "movement_type"].includes(header)) {
       headerMap.movementType = index;
+    }
+
+    if (["tipo inversion", "tipo de inversion", "inversion", "investment type", "investment_type"].includes(header)) {
+      headerMap.investmentType = index;
     }
 
     if (["monto crc", "monto_crc", "amount crc", "amount_crc", "monto", "amount", "valor", "balance"].includes(header)) {
@@ -229,6 +242,20 @@ function parseMovementType(value: ExcelCell, rowNumber: number): PatrimonyMoveme
   }
 
   throw new Error(`Fila ${rowNumber}: tipo de movimiento inválido. Usá Aporte o Interés.`);
+}
+
+function parseInvestmentType(value: ExcelCell, rowNumber: number): PatrimonyInvestmentType {
+  const normalized = normalizeText(String(value ?? ""));
+
+  if (["", "renta fija", "fixed income", "fixed_income", "fija"].includes(normalized)) {
+    return "fixed_income";
+  }
+
+  if (["renta variable", "variable income", "variable_income", "variable"].includes(normalized)) {
+    return "variable_income";
+  }
+
+  throw new Error(`Fila ${rowNumber}: tipo de inversión inválido. Usá Renta Fija o Renta Variable.`);
 }
 
 function parseDate(value: ExcelCell, rowNumber: number) {

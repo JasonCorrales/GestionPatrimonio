@@ -2,13 +2,14 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PatrimonyRecordService, type PatrimonyRecordView } from "@/application/use-cases/PatrimonyRecordService";
+import type { PatrimonyInvestmentType } from "@/domain/monthlyPatrimonyRecord";
 import { RetirementCalculationService } from "@/application/use-cases/RetirementCalculationService";
 import type { SavedRetirementCalculation } from "@/domain/retirementCalculation";
 import { createPatrimonyRecordRepository } from "@/data/createPatrimonyRecordRepository";
 import { createRetirementCalculationRepository } from "@/data/createRetirementCalculationRepository";
 import { useCurrencyPreference } from "@/ui/currency";
 
-const percentFormatter = new Intl.NumberFormat("es-CR", {
+const percentFormatter = new Intl.NumberFormat("es-ES", {
   maximumFractionDigits: 1,
 });
 
@@ -49,8 +50,9 @@ export function DashboardHome() {
 
   const selectedMonth = selectedDate.slice(0, 7);
   const cumulativeRecords = records.filter((record) => record.recordDate.slice(0, 7) <= selectedMonth);
-  const cumulativeTrend = buildCumulativeTrend(records, displayRecordAmount);
+  const cumulativeTrend = buildCumulativeTrend(cumulativeRecords, displayRecordAmount);
   const distribution = buildDistribution(cumulativeRecords, displayRecordAmount);
+  const investmentDistribution = buildInvestmentDistribution(cumulativeRecords, displayRecordAmount);
   const cumulativeTotal = distribution.reduce((total, item) => total + item.amount, 0);
   const retirementTarget = displayCrcAmount(retirementGoal?.finalAmount ?? 0);
   const retirementProgress = retirementTarget > 0
@@ -95,6 +97,34 @@ export function DashboardHome() {
       </section>
 
       <section className="two-column-grid dashboard-grid">
+        <article className="card elevated-card dashboard-card dashboard-wide-card retirement-dashboard-card">
+          <div>
+            <p className="eyebrow">Jubilación</p>
+            <h2>Progreso hacia la meta</h2>
+          </div>
+
+          {retirementGoal ? (
+            <div className="progress-panel">
+              <div className="progress-track">
+                <span style={{ width: `${retirementProgress}%` }} />
+              </div>
+              <div className="progress-footer">
+                <strong>{percentFormatter.format(retirementProgress)}%</strong>
+                <span>Faltan {formatCurrency(retirementGap)}</span>
+              </div>
+              <p className="active-retirement-goal">
+                <span>Meta activa</span>
+                <strong>{retirementGoal.description}</strong>
+                <small>Guardada el {formatDate(retirementGoal.createdAt)}.</small>
+              </p>
+            </div>
+          ) : (
+            <p className="empty-state">
+              Guardá un cálculo en Jubilación para activar esta barra de progreso.
+            </p>
+          )}
+        </article>
+
         <article className="card elevated-card dashboard-card">
           <div className="section-title-row">
             <div>
@@ -135,37 +165,44 @@ export function DashboardHome() {
         </article>
 
         <article className="card elevated-card dashboard-card">
-          <div>
-            <p className="eyebrow">Jubilación</p>
-            <h2>Progreso hacia la meta</h2>
+          <div className="section-title-row">
+            <div>
+              <p className="eyebrow">Tipo de inversión</p>
+              <h2>Renta fija vs variable</h2>
+            </div>
+            <span className="pill">{formatMonth(selectedMonth)}</span>
           </div>
 
-          {retirementGoal ? (
-            <div className="progress-panel">
-              <div className="progress-summary">
-                <span>Llevás</span>
-                <strong>{formatCurrency(cumulativeTotal)}</strong>
-                <small>de {formatCurrency(retirementTarget)}</small>
-              </div>
-              <div className="progress-track">
-                <span style={{ width: `${retirementProgress}%` }} />
-              </div>
-              <div className="progress-footer">
-                <strong>{percentFormatter.format(retirementProgress)}%</strong>
-                <span>Faltan {formatCurrency(retirementGap)}</span>
-              </div>
-              <p className="active-retirement-goal">
-                <span>Meta activa</span>
-                <strong>{retirementGoal.description}</strong>
-                <small>Guardada el {formatDate(retirementGoal.createdAt)}.</small>
-              </p>
-            </div>
+          {investmentDistribution.length === 0 ? (
+            <p className="empty-state">No hay registros hasta este mes.</p>
           ) : (
-            <p className="empty-state">
-              Guardá un cálculo en Jubilación para activar esta barra de progreso.
-            </p>
+            <div className="chart-layout">
+              <div
+                aria-label="Distribución circular por tipo de inversión"
+                className="donut-chart"
+                role="img"
+                style={{ background: buildDonutGradient(investmentDistribution) }}
+              >
+                <span>{formatCurrency(cumulativeTotal)}</span>
+              </div>
+
+              <div className="chart-legend">
+                {investmentDistribution.map((item) => (
+                  <div key={item.investmentType} className="legend-item">
+                    <span style={{ background: item.color }} />
+                    <div>
+                      <strong>{item.label}</strong>
+                      <small>
+                        {formatCurrency(item.amount)} · {percentFormatter.format(item.percentage)}%
+                      </small>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
           )}
         </article>
+
       </section>
 
       <section className="card elevated-card dashboard-card line-chart-card">
@@ -228,6 +265,14 @@ export function DashboardHome() {
 type DistributionItem = {
   categoryId: string;
   categoryName: string;
+  amount: number;
+  percentage: number;
+  color: string;
+};
+
+type InvestmentDistributionItem = {
+  investmentType: PatrimonyInvestmentType;
+  label: string;
   amount: number;
   percentage: number;
   color: string;
@@ -329,8 +374,8 @@ function CumulativeLineChart({ points, formatCurrency }: CumulativeLineChartProp
       </svg>
       <div className="line-chart-legend" aria-label="Leyenda de evolución acumulada">
         <span><i className="total-line-swatch" /> Patrimonio acumulado</span>
-        <span><i className="contribution-line-swatch" /> Sombreado Aporte</span>
-        <span><i className="interest-line-swatch" /> Sombreado Interés</span>
+        <span><i className="contribution-line-swatch" /> Sombreado aporte</span>
+        <span><i className="interest-line-swatch" /> Sombreado interés</span>
       </div>
     </div>
   );
@@ -383,6 +428,37 @@ function buildDistribution(
       color: chartColors[index % chartColors.length],
     }))
     .sort((left, right) => right.amount - left.amount);
+}
+
+function buildInvestmentDistribution(
+  records: PatrimonyRecordView[],
+  displayRecordAmount: (record: PatrimonyRecordView) => number,
+): InvestmentDistributionItem[] {
+  const totals: Record<PatrimonyInvestmentType, number> = {
+    fixed_income: 0,
+    variable_income: 0,
+  };
+
+  for (const record of records) {
+    totals[record.investmentType] += displayRecordAmount(record);
+  }
+
+  if (records.length === 0) {
+    return [];
+  }
+
+  const total = totals.fixed_income + totals.variable_income;
+  const items: Array<{ investmentType: PatrimonyInvestmentType; label: string; color: string }> = [
+    { investmentType: "fixed_income", label: "Renta fija", color: "#2458d3" },
+    { investmentType: "variable_income", label: "Renta variable", color: "#32a6a6" },
+  ];
+
+  return items
+    .map((item) => ({
+      ...item,
+      amount: totals[item.investmentType],
+      percentage: total > 0 ? (totals[item.investmentType] / total) * 100 : 0,
+    }));
 }
 
 function buildCumulativeTrend(
@@ -445,7 +521,7 @@ function enumerateMonths(firstMonth: string, lastMonth: string) {
   return months;
 }
 
-function buildDonutGradient(distribution: DistributionItem[]) {
+function buildDonutGradient(distribution: Array<{ percentage: number; color: string }>) {
   let cursor = 0;
   const segments = distribution.map((item) => {
     const start = cursor;
