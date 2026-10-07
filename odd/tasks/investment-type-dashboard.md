@@ -35,3 +35,6 @@ Add an investment-type classification to patrimony records and show a dashboard 
 - `npm run typecheck`
 - `npm run build`
 - Manual check: create/edit/duplicate records preserve investment type, history shows it, Dashboard split updates by selected month.
+
+## Commit evidence
+- `2adcfc6` — `feat: add investment type dashboard`
