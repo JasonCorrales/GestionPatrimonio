@@ -1403,6 +1403,16 @@ button {
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
 }
 
+.investments-page .currency-value-grid .metric-card strong {
+  font-size: clamp(1.25rem, 2.2vw, 1.75rem);
+  white-space: nowrap;
+}
+
+.positions-card {
+  display: grid;
+  gap: 20px;
+}
+
 .positions-table {
   overflow-x: auto;
 }
@@ -1430,8 +1440,164 @@ button {
   overflow-wrap: anywhere;
 }
 
+.positions-table .numeric-negative {
+  color: var(--danger-dark);
+  font-weight: 900;
+}
+
+.allocation-dashboard {
+  border-top: 1px solid var(--border);
+  display: grid;
+  gap: 18px;
+  padding-top: 20px;
+}
+
+.allocation-heading h3,
+.allocation-heading p,
+.allocation-list-wrap h4 {
+  margin: 0;
+}
+
+.investments-page .muted strong {
+  color: var(--foreground);
+  font-weight: 900;
+}
+
+.allocation-heading p {
+  margin-top: 6px;
+}
+
+.allocation-currency-grid {
+  display: grid;
+  gap: 18px;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.allocation-panel {
+  align-items: center;
+  background: var(--background-soft);
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  display: grid;
+  gap: 28px;
+  grid-template-columns: minmax(280px, 360px) minmax(260px, 1fr);
+  padding: 22px;
+}
+
+.allocation-chart-wrap {
+  display: flex;
+  justify-content: center;
+  min-width: 0;
+}
+
+.allocation-chart {
+  align-items: center;
+  display: flex;
+  height: min(360px, calc(100vw - 72px));
+  justify-content: center;
+  max-width: 360px;
+  position: relative;
+  width: 100%;
+}
+
+.allocation-svg {
+  height: 100%;
+  overflow: visible;
+  transform: rotate(-90deg);
+  width: 100%;
+}
+
+.allocation-track,
+.allocation-segment {
+  fill: none;
+}
+
+.allocation-track {
+  stroke: color-mix(in srgb, var(--border) 72%, transparent);
+}
+
+.allocation-segment {
+  cursor: pointer;
+  stroke-linecap: butt;
+  transition: filter 160ms ease, opacity 160ms ease, stroke-width 160ms ease;
+}
+
+.allocation-segment:hover,
+.allocation-segment:focus-visible {
+  filter: drop-shadow(0 8px 16px rgba(20, 32, 51, 0.24));
+  opacity: 0.9;
+  outline: none;
+  stroke-width: 62px;
+}
+
+.allocation-chart span {
+  background: var(--background-soft);
+  border-radius: 999px;
+  display: grid;
+  font-weight: 900;
+  gap: 4px;
+  max-width: 150px;
+  padding: 22px 18px;
+  position: absolute;
+  text-align: center;
+  z-index: 1;
+}
+
+.allocation-chart small {
+  color: var(--muted);
+  font-size: 0.78rem;
+  font-weight: 800;
+}
+
+.allocation-list-wrap {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+
+.allocation-list {
+  column-gap: 18px;
+  columns: 2 220px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.allocation-list li {
+  align-items: center;
+  break-inside: avoid;
+  display: grid;
+  gap: 10px;
+  grid-template-columns: 14px minmax(0, 1fr);
+  margin-bottom: 10px;
+}
+
+.allocation-swatch {
+  border-radius: 999px;
+  height: 12px;
+  width: 12px;
+}
+
+.allocation-list strong,
+.allocation-list small {
+  display: block;
+}
+
+.allocation-list small {
+  color: var(--muted);
+  margin-top: 2px;
+}
+
 @media (max-width: 760px) {
   .primary-action {
     width: 100%;
+  }
+
+  .allocation-panel {
+    grid-template-columns: 1fr;
+  }
+
+  .allocation-list {
+    columns: 1;
   }
 }
