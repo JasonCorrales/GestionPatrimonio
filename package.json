@@ -6,14 +6,17 @@
     "dev": "next dev",
     "build": "next build",
     "lint": "eslint .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "test:ibkr": "node --test tests/ibkr/*.test.ts"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.47.10",
+    "fast-xml-parser": "^5.11.2",
     "next": "^16.3.6",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
-    "read-excel-file": "^9.3.10"
+    "read-excel-file": "^9.3.10",
+    "server-only": "^0.0.1"
   },
   "devDependencies": {
     "@types/node": "^22.10.5",

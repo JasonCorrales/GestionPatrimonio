@@ -12,6 +12,7 @@ const navigationItems = [
   { href: "/records", label: "Registros", description: "Alta e historial" },
   { href: "/categories", label: "Categorías", description: "Catálogo" },
   { href: "/retirement", label: "Jubilación", description: "Interés compuesto" },
+  { href: "/investments", label: "Inversiones USA", description: "IBKR Flex" },
   { href: "/backups", label: "Backups", description: "Respaldo JSON" },
 ];
 
