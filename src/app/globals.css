@@ -1373,3 +1373,65 @@ button {
     min-width: 520px;
   }
 }
+
+.primary-action {
+  background: var(--primary);
+  border: 0;
+  border-radius: 14px;
+  color: white;
+  font-weight: 900;
+  padding: 14px 18px;
+}
+
+.primary-action:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.status-banner {
+  border-color: color-mix(in srgb, var(--primary) 28%, var(--border));
+}
+
+.status-banner p {
+  color: var(--muted);
+  margin: 8px 0 0;
+}
+
+.currency-value-grid {
+  display: grid;
+  gap: 16px;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+}
+
+.positions-table {
+  overflow-x: auto;
+}
+
+.positions-table table {
+  border-collapse: collapse;
+  min-width: 760px;
+  width: 100%;
+}
+
+.positions-table th,
+.positions-table td {
+  border-bottom: 1px solid var(--border);
+  padding: 12px 10px;
+  text-align: left;
+}
+
+.positions-table th {
+  color: var(--muted);
+  font-size: 0.82rem;
+  text-transform: uppercase;
+}
+
+.positions-table td {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 760px) {
+  .primary-action {
+    width: 100%;
+  }
+}
