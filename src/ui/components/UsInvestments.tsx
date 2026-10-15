@@ -25,6 +25,14 @@ type AllocationGroup = {
   total: number;
   items: AllocationItem[];
 };
+type SortColumn = "symbol" | "quantity" | "markPrice" | "costBasisPrice" | "positionValue" | "costBasisMoney" | "fifoPnlUnrealized";
+type SortDirection = "asc" | "desc";
+type SortState = { column: SortColumn; direction: SortDirection } | null;
+type PositionColumn = {
+  key: SortColumn;
+  label: string;
+  kind: "text" | "numeric";
+};
 type PortfolioStatus = {
   configured: boolean;
   owner: boolean;
@@ -186,23 +194,57 @@ function Metric({ label, value }: Readonly<{ label: string; value: string }>) {
   return <article className="metric-card"><span>{label}</span><strong>{value}</strong></article>;
 }
 
+const POSITION_COLUMNS: PositionColumn[] = [
+  { key: "symbol", label: "Símbolo", kind: "text" },
+  { key: "quantity", label: "Cantidad", kind: "numeric" },
+  { key: "markPrice", label: "Precio de mercado", kind: "numeric" },
+  { key: "costBasisPrice", label: "Precio", kind: "numeric" },
+  { key: "positionValue", label: "Valor", kind: "numeric" },
+  { key: "costBasisMoney", label: "Costo", kind: "numeric" },
+  { key: "fifoPnlUnrealized", label: "P/L", kind: "numeric" },
+];
+
 function PositionsTable({ positions }: Readonly<{ positions: Position[] }>) {
+  const [sort, setSort] = useState<SortState>(null);
+  const sortedPositions = useMemo(() => sortPositions(positions, sort), [positions, sort]);
+
+  function chooseSort(column: PositionColumn) {
+    setSort((current) => {
+      if (current?.column === column.key) {
+        return { column: column.key, direction: current.direction === "asc" ? "desc" : "asc" };
+      }
+      return { column: column.key, direction: column.kind === "text" ? "asc" : "desc" };
+    });
+  }
+
   return (
     <div className="positions-table">
       <table>
         <thead>
           <tr>
-            <th>Símbolo</th>
-            <th>Cantidad</th>
-            <th>Precio de mercado</th>
-            <th>Precio</th>
-            <th>Valor</th>
-            <th>Costo</th>
-            <th>P/L</th>
+            {POSITION_COLUMNS.map((column) => {
+              const active = sort?.column === column.key;
+              const directionLabel = active ? (sort.direction === "asc" ? "ascendente" : "descendente") : "sin ordenar";
+              const nextDirection = active && sort.direction === "asc" ? "descendente" : column.kind === "text" ? "ascendente" : "descendente";
+              return (
+                <th key={column.key} aria-sort={active ? (sort.direction === "asc" ? "ascending" : "descending") : "none"}>
+                  <button
+                    type="button"
+                    className="sort-header-button"
+                    aria-label={`Ordenar posiciones por ${column.label} en orden ${nextDirection}`}
+                    title={`Ordenar por ${column.label} (${directionLabel}). Siguiente: ${nextDirection}.`}
+                    onClick={() => chooseSort(column)}
+                  >
+                    <span>{column.label}</span>
+                    <span className="sort-indicator" aria-hidden="true">{active ? (sort.direction === "asc" ? "↑" : "↓") : "↕"}</span>
+                  </button>
+                </th>
+              );
+            })}
           </tr>
         </thead>
         <tbody>
-          {positions.map((position, index) => (
+          {sortedPositions.map((position, index) => (
             <tr key={`${position.symbol ?? "pos"}-${position.currency}-${index}`}>
               <td><strong>{position.symbol ?? "—"}</strong></td>
               <NumericCell value={position.quantity} formatter={formatNumber} />
@@ -217,6 +259,49 @@ function PositionsTable({ positions }: Readonly<{ positions: Position[] }>) {
       </table>
     </div>
   );
+}
+
+function sortPositions(positions: Position[], sort: SortState) {
+  if (!sort) return positions;
+  const column = POSITION_COLUMNS.find((item) => item.key === sort.column);
+  if (!column) return positions;
+  return positions
+    .map((position, index) => ({ position, index }))
+    .sort((left, right) => {
+      const comparison = column.kind === "text"
+        ? compareSymbols(left.position.symbol, right.position.symbol, sort.direction)
+        : compareNumericValues(left.position[column.key], right.position[column.key], sort.direction);
+      if (comparison === 0) return left.index - right.index;
+      return comparison;
+    })
+    .map(({ position }) => position);
+}
+
+function compareSymbols(left: string | null, right: string | null, direction: SortDirection) {
+  const leftSymbol = left?.trim() ?? "";
+  const rightSymbol = right?.trim() ?? "";
+  const leftMissing = leftSymbol.length === 0;
+  const rightMissing = rightSymbol.length === 0;
+  if (leftMissing && rightMissing) return 0;
+  if (leftMissing) return 1;
+  if (rightMissing) return -1;
+  const comparison = leftSymbol.localeCompare(rightSymbol, "es-CR", { numeric: true, sensitivity: "base" });
+  return direction === "asc" ? comparison : -comparison;
+}
+
+function compareNumericValues(left: string | null, right: string | null, direction: SortDirection) {
+  const leftNumber = parseFiniteNumber(left);
+  const rightNumber = parseFiniteNumber(right);
+  if (leftNumber === null && rightNumber === null) return 0;
+  if (leftNumber === null) return 1;
+  if (rightNumber === null) return -1;
+  return direction === "asc" ? leftNumber - rightNumber : rightNumber - leftNumber;
+}
+
+function parseFiniteNumber(value: string | null) {
+  if (!value) return null;
+  const number = Number(value);
+  return Number.isFinite(number) ? number : null;
 }
 
 function NumericCell({ value, formatter }: Readonly<{ value: string | null; formatter: (value: string | null) => string }>) {
