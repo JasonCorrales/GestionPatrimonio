@@ -1,5 +1,5 @@
 import { createClient } from "@supabase/supabase-js";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -12,6 +12,7 @@ const BACKUP_SCHEMA_VERSION = 1;
 const CATEGORY_TABLE_NAME = "category";
 const RECORDS_TABLE_NAME = "monthly_patrimony_records";
 const RETIREMENT_TABLE_NAME = "retirement_calculations";
+export const PATRIMONY_RECORDS_SELECT = "id, month, record_date, category_id, amount_crc, amount_usd, movement_type, investment_type, notes, created_at, updated_at";
 
 type BackupPayload = {
   schemaVersion: typeof BACKUP_SCHEMA_VERSION;
@@ -27,6 +28,8 @@ type BackupPayload = {
     retirementCalculations: unknown[];
   };
 };
+
+type BackupPayloadInput = Omit<BackupPayload, "schemaVersion" | "source">;
 
 export async function GET(request: NextRequest) {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
@@ -67,7 +70,7 @@ export async function GET(request: NextRequest) {
       .order("display_order", { ascending: true }),
     supabase
       .from(RECORDS_TABLE_NAME)
-      .select("id, month, record_date, category_id, amount_crc, amount_usd, movement_type, notes, created_at, updated_at")
+      .select(PATRIMONY_RECORDS_SELECT)
       .order("record_date", { ascending: true })
       .order("created_at", { ascending: true }),
     supabase
@@ -83,10 +86,8 @@ export async function GET(request: NextRequest) {
   }
 
   const exportedAt = new Date().toISOString();
-  const backup: BackupPayload = {
-    schemaVersion: BACKUP_SCHEMA_VERSION,
+  const backup = buildBackupPayload({
     exportedAt,
-    source: "GestionPatrimonio",
     user: {
       id: userData.user.id,
       email: userData.user.email ?? null,
@@ -96,7 +97,7 @@ export async function GET(request: NextRequest) {
       patrimonyRecords: recordsResult.data ?? [],
       retirementCalculations: retirementResult.data ?? [],
     },
-  };
+  });
 
   return NextResponse.json(backup, {
     headers: {
@@ -104,6 +105,14 @@ export async function GET(request: NextRequest) {
       "Content-Disposition": `attachment; filename="${buildBackupFilename(exportedAt)}"`,
     },
   });
+}
+
+export function buildBackupPayload(input: BackupPayloadInput): BackupPayload {
+  return {
+    schemaVersion: BACKUP_SCHEMA_VERSION,
+    source: "GestionPatrimonio",
+    ...input,
+  };
 }
 
 function getBearerToken(authorizationHeader: string | null) {

@@ -292,6 +292,7 @@ export function PatrimonyRecords() {
               >
                 <option value="fixed_income">Renta Fija</option>
                 <option value="variable_income">Renta Variable</option>
+                <option value="emergency_fund">Fondo de emergencia</option>
               </select>
             </label>
 
@@ -559,7 +560,15 @@ function formatMovementType(value: PatrimonyMovementType | null) {
 }
 
 function formatInvestmentType(value: PatrimonyInvestmentType) {
-  return value === "variable_income" ? "Renta Variable" : "Renta Fija";
+  if (value === "variable_income") {
+    return "Renta Variable";
+  }
+
+  if (value === "emergency_fund") {
+    return "Fondo de emergencia";
+  }
+
+  return "Renta Fija";
 }
 
 function getErrorMessage(error: unknown) {
