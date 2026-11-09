@@ -139,7 +139,7 @@ export function validatePatrimonyRecord(
     });
   }
 
-  if (!["fixed_income", "variable_income"].includes(input.investmentType)) {
+  if (!["fixed_income", "variable_income", "emergency_fund"].includes(input.investmentType)) {
     errors.push({
       field: "investmentType",
       message: "Investment type is required.",

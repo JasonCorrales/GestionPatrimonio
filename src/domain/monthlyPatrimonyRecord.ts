@@ -1,7 +1,7 @@
 import type { PatrimonyCategory } from "./patrimonyCategory";
 
 export type PatrimonyMovementType = "contribution" | "interest";
-export type PatrimonyInvestmentType = "fixed_income" | "variable_income";
+export type PatrimonyInvestmentType = "fixed_income" | "variable_income" | "emergency_fund";
 
 export type MonthlyPatrimonyRecord = {
   id: string;

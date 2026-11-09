@@ -88,7 +88,7 @@ export function PatrimonyBulkImport({
         </div>
         <div>
           <strong>Tipo de inversión</strong>
-          <span>Opcional. Usá Renta Fija o Renta Variable. Si se omite, se importa como Renta Fija.</span>
+          <span>Opcional. Usá Renta Fija, Renta Variable o Fondo de emergencia. Si se omite, se importa como Renta Fija.</span>
         </div>
         <div>
           <strong>Monto CRC</strong>
@@ -255,7 +255,11 @@ function parseInvestmentType(value: ExcelCell, rowNumber: number): PatrimonyInve
     return "variable_income";
   }
 
-  throw new Error(`Fila ${rowNumber}: tipo de inversión inválido. Usá Renta Fija o Renta Variable.`);
+  if (["fondo de emergencia", "emergency fund", "emergency_fund"].includes(normalized)) {
+    return "emergency_fund";
+  }
+
+  throw new Error(`Fila ${rowNumber}: tipo de inversión inválido. Usá Renta Fija, Renta Variable o Fondo de emergencia.`);
 }
 
 function parseDate(value: ExcelCell, rowNumber: number) {

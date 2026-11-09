@@ -2,12 +2,12 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { PatrimonyRecordService, type PatrimonyRecordView } from "@/application/use-cases/PatrimonyRecordService";
-import type { PatrimonyInvestmentType } from "@/domain/monthlyPatrimonyRecord";
 import { RetirementCalculationService } from "@/application/use-cases/RetirementCalculationService";
 import type { SavedRetirementCalculation } from "@/domain/retirementCalculation";
 import { createPatrimonyRecordRepository } from "@/data/createPatrimonyRecordRepository";
 import { createRetirementCalculationRepository } from "@/data/createRetirementCalculationRepository";
 import { useCurrencyPreference } from "@/ui/currency";
+import { buildInvestmentDistribution } from "@/ui/investmentDistribution";
 
 const percentFormatter = new Intl.NumberFormat("es-ES", {
   maximumFractionDigits: 1,
@@ -52,7 +52,11 @@ export function DashboardHome() {
   const cumulativeRecords = records.filter((record) => record.recordDate.slice(0, 7) <= selectedMonth);
   const cumulativeTrend = buildCumulativeTrend(cumulativeRecords, displayRecordAmount);
   const distribution = buildDistribution(cumulativeRecords, displayRecordAmount);
-  const investmentDistribution = buildInvestmentDistribution(cumulativeRecords, displayRecordAmount);
+  const investmentDistribution = buildInvestmentDistribution(cumulativeRecords.map((record) => ({
+    investmentType: record.investmentType,
+    categoryCode: record.category.code,
+    amount: displayRecordAmount(record),
+  })));
   const cumulativeTotal = distribution.reduce((total, item) => total + item.amount, 0);
   const retirementTarget = displayCrcAmount(retirementGoal?.finalAmount ?? 0);
   const retirementProgress = retirementTarget > 0
@@ -168,7 +172,6 @@ export function DashboardHome() {
           <div className="section-title-row">
             <div>
               <p className="eyebrow">Tipo de inversión</p>
-              <h2>Renta fija vs variable</h2>
             </div>
             <span className="pill">{formatMonth(selectedMonth)}</span>
           </div>
@@ -188,7 +191,7 @@ export function DashboardHome() {
 
               <div className="chart-legend">
                 {investmentDistribution.map((item) => (
-                  <div key={item.investmentType} className="legend-item">
+                  <div key={item.id} className="legend-item">
                     <span style={{ background: item.color }} />
                     <div>
                       <strong>{item.label}</strong>
@@ -265,14 +268,6 @@ export function DashboardHome() {
 type DistributionItem = {
   categoryId: string;
   categoryName: string;
-  amount: number;
-  percentage: number;
-  color: string;
-};
-
-type InvestmentDistributionItem = {
-  investmentType: PatrimonyInvestmentType;
-  label: string;
   amount: number;
   percentage: number;
   color: string;
@@ -428,37 +423,6 @@ function buildDistribution(
       color: chartColors[index % chartColors.length],
     }))
     .sort((left, right) => right.amount - left.amount);
-}
-
-function buildInvestmentDistribution(
-  records: PatrimonyRecordView[],
-  displayRecordAmount: (record: PatrimonyRecordView) => number,
-): InvestmentDistributionItem[] {
-  const totals: Record<PatrimonyInvestmentType, number> = {
-    fixed_income: 0,
-    variable_income: 0,
-  };
-
-  for (const record of records) {
-    totals[record.investmentType] += displayRecordAmount(record);
-  }
-
-  if (records.length === 0) {
-    return [];
-  }
-
-  const total = totals.fixed_income + totals.variable_income;
-  const items: Array<{ investmentType: PatrimonyInvestmentType; label: string; color: string }> = [
-    { investmentType: "fixed_income", label: "Renta fija", color: "#2458d3" },
-    { investmentType: "variable_income", label: "Renta variable", color: "#32a6a6" },
-  ];
-
-  return items
-    .map((item) => ({
-      ...item,
-      amount: totals[item.investmentType],
-      percentage: total > 0 ? (totals[item.investmentType] / total) * 100 : 0,
-    }));
 }
 
 function buildCumulativeTrend(

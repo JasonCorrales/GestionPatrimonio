@@ -1,5 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
-import { NextResponse, type NextRequest } from "next/server";
+import { NextResponse, type NextRequest } from "next/server.js";
 
 export const runtime = "nodejs";
 export const dynamic = "force-dynamic";
@@ -34,12 +34,15 @@ type BackupCategory = {
   interest_rate: NumericValue | null;
 };
 
+type BackupInvestmentType = "fixed_income" | "variable_income" | "emergency_fund";
+
 type BackupPatrimonyRecord = {
   record_date: string;
   category_id: string;
   amount_crc: NumericValue;
   amount_usd: NumericValue | null;
   movement_type: "contribution" | "interest" | null;
+  investment_type: BackupInvestmentType | null;
   notes: string | null;
   created_at: string | null;
   updated_at: string | null;
@@ -90,6 +93,7 @@ type BackupDatabase = {
           amount_crc: NumericValue;
           amount_usd: NumericValue | null;
           movement_type: "contribution" | "interest" | null;
+          investment_type: BackupInvestmentType | null;
           notes: string | null;
           created_at: string | null;
           updated_at: string | null;
@@ -279,7 +283,7 @@ function parseCategories(categories: unknown[]): Result<BackupCategory[]> {
   return { ok: true, value: parsed };
 }
 
-function parsePatrimonyRecords(records: unknown[], categoryIds: Set<string>): Result<BackupPatrimonyRecord[]> {
+export function parsePatrimonyRecords(records: unknown[], categoryIds: Set<string>): Result<BackupPatrimonyRecord[]> {
   const parsed: BackupPatrimonyRecord[] = [];
 
   for (const [index, record] of records.entries()) {
@@ -303,6 +307,10 @@ function parsePatrimonyRecords(records: unknown[], categoryIds: Set<string>): Re
       return { ok: false, error: `Patrimony record at index ${index} has an invalid movement_type.` };
     }
 
+    if (!isBackupInvestmentType(record.investment_type)) {
+      return { ok: false, error: `Patrimony record at index ${index} has an invalid investment_type.` };
+    }
+
     if (!isNullableString(record.notes) || !isNullableString(record.created_at) || !isNullableString(record.updated_at)) {
       return { ok: false, error: `Patrimony record at index ${index} has invalid notes or timestamps.` };
     }
@@ -313,6 +321,7 @@ function parsePatrimonyRecords(records: unknown[], categoryIds: Set<string>): Re
       amount_crc: record.amount_crc,
       amount_usd: record.amount_usd,
       movement_type: record.movement_type,
+      investment_type: record.investment_type ?? "fixed_income",
       notes: record.notes,
       created_at: record.created_at,
       updated_at: record.updated_at,
@@ -405,7 +414,7 @@ async function deleteCurrentUserData(supabase: BackupSupabaseClient) {
   return undefined;
 }
 
-async function restoreBackupData(supabase: BackupSupabaseClient, backup: BackupPayload): Promise<RestoreResult> {
+export async function restoreBackupData(supabase: BackupSupabaseClient, backup: BackupPayload): Promise<RestoreResult> {
   const categoryIdMap = new Map<string, string>();
   for (const category of backup.data.categories) {
     const { data, error } = await supabase
@@ -444,6 +453,7 @@ async function restoreBackupData(supabase: BackupSupabaseClient, backup: BackupP
       amount_crc: record.amount_crc,
       amount_usd: record.amount_usd,
       movement_type: record.movement_type,
+      investment_type: record.investment_type,
       notes: record.notes,
       created_at: record.created_at,
       updated_at: record.updated_at,
@@ -545,6 +555,14 @@ function isNumeric(value: unknown): value is NumericValue {
   }
 
   return typeof value === "string" && value.trim() !== "" && Number.isFinite(Number(value));
+}
+
+function isBackupInvestmentType(value: unknown): value is BackupInvestmentType | null | undefined {
+  return value === undefined
+    || value === null
+    || value === "fixed_income"
+    || value === "variable_income"
+    || value === "emergency_fund";
 }
 
 function isNullableNumeric(value: unknown): value is NumericValue | null {
